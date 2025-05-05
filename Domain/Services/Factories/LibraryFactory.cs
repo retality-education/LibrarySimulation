@@ -49,9 +49,9 @@ namespace LibrarySimulation.Domain.Services.Factories
         {
             return new Librarian(name, library);
         }
-        public static Reader CreateReader(string name, Library library)
+        public static Reader CreateReader(string name)
         {
-            return new Reader(name, library);
+            return new Reader(name);
         }
     }
 }
