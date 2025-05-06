@@ -10,6 +10,7 @@ using LibrarySimulation.Core.Enums;
 using LibrarySimulation.Domain.Services.Factories;
 using System.Diagnostics;
 using LibrarySimulation.Domain.Entities.Persons;
+using LibrarySimulation.Core.Interfaces;
 
 namespace LibrarySimulation.Domain.Aggregates
 {

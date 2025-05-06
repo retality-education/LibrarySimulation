@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace LibrarySimulation.Domain.Aggregates
+namespace LibrarySimulation.Core.Interfaces
 {
     internal interface IObserver 
     {
