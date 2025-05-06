@@ -25,11 +25,7 @@ namespace LibrarySimulation.Domain.Services
         {
             _library = library;
             FillLibraryWithPublications();
-            InitializeLibrarians();
         }
-
-        
-
         private void FillLibraryWithPublications()
         {
             var libraryPublications = new List<Publication>
@@ -165,6 +161,7 @@ namespace LibrarySimulation.Domain.Services
         }
         private void StartSimulation()
         {
+            InitializeLibrarians();
             while (true)
             {
                 // Увеличиваем день

@@ -40,7 +40,9 @@ namespace LibrarySimulation.Domain.Aggregates
        
         public void AddLibrarian(string name)
         {
-            Librarians.Add(LibraryFactory.CreateLibrarian(name, this));
+            var temp = LibraryFactory.CreateLibrarian(name, this);
+            Librarians.Add(temp);
+            Notify(LibraryEvents.CreateWorker, WorkerID: temp.Id);
         }
 
         #endregion

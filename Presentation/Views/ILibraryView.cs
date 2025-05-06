@@ -11,6 +11,8 @@ namespace LibrarySimulation.Presentation.Views
 {
     internal interface ILibraryView : IObserver
     {
+        void OnCreateWorker(int WorkerId);
+
         // Читатель пришел в библиотеку с книгой
         void OnReaderComeToLibraryWithBook(int readerId);
 
@@ -24,10 +26,10 @@ namespace LibrarySimulation.Presentation.Views
         void OnReaderStartedDialogueWithWorker(int readerId, int workerId);
 
         // Читатель запросил книгу
-        void OnReaderAskedForBook(int readerId);
+        void OnReaderAskedForBook(int readerId, int workerId);
 
         // Читатель хочет вернуть книгу
-        void OnReaderAskedForReturnBook(int readerId);
+        void OnReaderAskedForReturnBook(int readerId, int workerId);
 
         // Библиотекарь отклонил запрос (просроченные книги)
         void OnWorkerDeclineRequest(int readerId, int workerId);
@@ -63,10 +65,10 @@ namespace LibrarySimulation.Presentation.Views
         void OnReaderGaveBook(int readerId, int workerId);
 
         // Читатель стал довольным
-        void OnReaderBecameHappy(int readerId);
+        void OnReaderBecameHappy(int readerId, int workerId);
 
         // Читатель рассердился
-        void OnReaderBecameAngry(int readerId);
+        void OnReaderBecameAngry(int readerId, int workerId);
 
         // Диалог с библиотекарем завершен
         void OnReaderEndedDialogueWithWorker(int readerId, int workerId);
