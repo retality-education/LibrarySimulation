@@ -51,10 +51,11 @@ namespace LibrarySimulation.Domain.Aggregates
         }
         public void ReaderComeToLibrary(Reader reader)
         {
-
-            Notify(LibraryEvents.ReaderComeToLibrary, reader.Id);
-
-            Thread.Sleep(1000);
+            if (reader.Requests.Peek().RequestType is RequestType.Return)
+                Notify(LibraryEvents.ReaderComeToLibraryWithBook, reader.Id);
+            else
+                Notify(LibraryEvents.ReaderComeToLibraryWithoutBook, reader.Id);
+                Thread.Sleep(1000);
             Librarian worker = GetLeastBusyLibrarian();
             Notify(LibraryEvents.ReaderJoinedQueue, reader.Id, WorkerID: worker.Id);
             worker.ReaderQueue.Enqueue(reader);

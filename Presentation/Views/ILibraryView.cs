@@ -11,8 +11,11 @@ namespace LibrarySimulation.Presentation.Views
 {
     internal interface ILibraryView : IObserver
     {
-        // Читатель пришел в библиотеку
-        void OnReaderComeToLibrary(int readerId);
+        // Читатель пришел в библиотеку с книгой
+        void OnReaderComeToLibraryWithBook(int readerId);
+
+        // Читатель пришёл в библиотеку без книги
+        void OnReaderComeToLibraryWithoutBook(int readerId);
 
         // Читатель встал в очередь к библиотекарю
         void OnReaderJoinedQueue(int readerId, int workerId);

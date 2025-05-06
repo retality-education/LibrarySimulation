@@ -8,7 +8,9 @@ namespace LibrarySimulation.Core.Enums
 {
     internal enum LibraryEvents
     {
-        ReaderComeToLibrary,
+        ReaderComeToLibraryWithBook,
+        ReaderComeToLibraryWithoutBook,
+
         ReaderJoinedQueue,//(id worker)
 
         ReaderStartedDialogueWithWorker,
