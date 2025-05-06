@@ -3,7 +3,6 @@ using LibrarySimulation.Domain.Aggregates;
 using LibrarySimulation.Domain.Entities;
 using LibrarySimulation.Domain.Services.Factories;
 using LibrarySimulation.Domain.Services;
-using LibrarySimulation.Presentation.Views.Components;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,6 +16,9 @@ using Timer = System.Windows.Forms.Timer;
 using LibrarySimulation.Presentation.Controllers;
 using LibrarySimulation.Domain.Entities.Persons;
 using System.Reflection.PortableExecutable;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Collections.Concurrent;
+using LibrarySimulation.Core;
 
 namespace LibrarySimulation.Presentation.Views
 {
@@ -24,165 +26,370 @@ namespace LibrarySimulation.Presentation.Views
     {
         public LibraryController Controller;
 
-        private Dictionary<int, PictureBox> Librarians = new();
-        private Dictionary<int, PictureBox> Readers = new();
+        // Потокобезопасные коллекции
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _readerMovements = new();
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _workerMovements = new();
+        private readonly ConcurrentDictionary<int, int> _heightOfLibrarians = new();
+        private readonly ConcurrentDictionary<int, int> _idFreePositionForReader = new(); //id_worker -> id_position(_queueXPositions)
+        private readonly ConcurrentDictionary<int, PictureBox> _readers = new();
+        private readonly ConcurrentDictionary<int, PictureBox> _librarians = new();
+        private readonly ConcurrentDictionary<int, PictureBox> _librarianAnswers = new();
+        private readonly ConcurrentDictionary<int, PictureBox> _readerAnswers = new();
+        
+
+        // Координаты и блокировки
+        private readonly List<int> _queueXPositions = new() { 620, 780, 940, 1100 };
+        private readonly object _syncNextPosition = new();
+        private readonly object _createWorkerLock = new();
+        private readonly Point _libraryLocation = new(107, 217);
+
+        // Компоненты формы
+        private readonly List<PictureBox> _answerLibrarianPictures;
+        private readonly List<PictureBox> _answerReaderPictures;
+        private readonly List<PictureBox> _workersPictures;
+        private int _heightForNextLibrarian = 120;
+        private int _xForLibrarians = 400;
+        private int _xForNextReader = 620;
+        private int _idLibrarian = 0;
+
         public LibraryForm()
         {
             InitializeComponent();
-            
+            _answerLibrarianPictures = new() { LibrarianAnswer1, LibrarianAnswer2 };
+            _answerReaderPictures = new() { ReaderAnswer1, ReaderAnswer2 };
+            _workersPictures = new() { Librarian1, Librarian2 };
         }
 
-        #region ILibraryView
-        public void OnReaderComeToLibrary(int readerId)
+        #region Movement Logic
+        private async Task MoveToY(PictureBox pictureBox, int targetY, CancellationToken token, int durationMs = 500)
         {
-            var reader = CreateReaderPicture();
-            Readers[readerId] = reader;
+            int startY = pictureBox.Top;
+            float distance = targetY - startY;
+            int steps = Math.Max(1, durationMs / 16); // ~60 FPS
+            float stepY = distance / steps;
 
-        }
-        private Image ByteArrayToPngImage(byte[] byteArray)
-        {
-            using (var ms = new MemoryStream(byteArray))
+            for (int i = 1; i <= steps; i++)
             {
-                return new Bitmap(ms); 
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                }catch (Exception e) {  }
+                    int newY = startY + (int)(stepY * i);
+
+                this.InvokeIfRequired(() => pictureBox.Top = newY);
+                try
+                {
+                    await Task.Delay(16, token); // Фиксированный интервал для плавности
+                }catch (Exception e) { }
+             }
+
+
+            // Финализация позиции
+            this.InvokeIfRequired(() => pictureBox.Top = targetY);
+        }
+
+        private async Task MoveToX(PictureBox pictureBox, int targetX, CancellationToken token, int durationMs = 500)
+        {
+            int startX = pictureBox.Left;
+            float distance = targetX - startX;
+            int steps = Math.Max(1, durationMs / 16); // ~60 FPS
+            float stepX = distance / steps;
+
+            for (int i = 1; i <= steps; i++)
+            {
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+                catch (Exception ex) { }
+                int newX = startX + (int)(stepX * i);
+
+                this.InvokeIfRequired(() => pictureBox.Left = newX);
+                try
+                {
+                    await Task.Delay(16, token);
+                }
+                catch (Exception ex) { }
+            }
+
+            // Финализация позиции
+            this.InvokeIfRequired(() => pictureBox.Left = targetX);
+        }
+
+        private void CancelReaderMovement(int readerId)
+        {
+            if (_readerMovements.TryRemove(readerId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
             }
         }
+        #endregion
+
+        #region ILibraryView Implementation
+        public void OnCreateWorker(int workerId)
+        {
+            lock (_createWorkerLock)
+            {
+                _heightOfLibrarians[workerId] = _heightForNextLibrarian;
+                _librarianAnswers[workerId] = _answerLibrarianPictures[_idLibrarian];
+                _readerAnswers[workerId] = _answerReaderPictures[_idLibrarian];
+                _librarians[workerId] = _workersPictures[_idLibrarian];
+                _idFreePositionForReader[workerId] = 0;
+                _idLibrarian++;
+
+                _heightForNextLibrarian += 285;
+            }
+        }
+
         private PictureBox CreateReaderPicture()
         {
-            var newReader = new PictureBox();
-            newReader.Image = ByteArrayToPngImage(Properties.Resources.Reader);
-            newReader.Size = new Size(80, 220);
-            newReader.SizeMode = PictureBoxSizeMode.StretchImage;
-            newReader.Location = new Point(locationX, 220);
-        }
-        // Dictionary< int, List<PictureBox> > LibrarianQueue
-        public void OnReaderJoinedQueue(int readerId, int workerId)
-        {
-            // MoveToQueueOfWorker
-            // where Worker = workerId
+            return new PictureBox
+            {
+                Size = new Size(80, 220),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Location = new Point(1200, 245)
+            };
         }
 
+        public async void OnReaderComeToLibraryWithBook(int readerId)
+        {
+            var reader = CreateReaderPicture();
+            reader.Image = Properties.Resources.ReaderWithBook;
+            _readers[readerId] = reader;
+            this.InvokeIfRequired(() => Controls.Add(reader));
+
+            var cts = new CancellationTokenSource();
+            _readerMovements[readerId] = cts;
+            await MoveToX(reader, 1150, cts.Token, TimingConsts.TimeToComeInLibrary);
+        }
+
+        public async void OnReaderComeToLibraryWithoutBook(int readerId)
+        {
+            var reader = CreateReaderPicture();
+            reader.Image = Properties.Resources.Reader;
+            _readers[readerId] = reader;
+            this.InvokeIfRequired(() => Controls.Add(reader));
+
+            var cts = new CancellationTokenSource();
+            _readerMovements[readerId] = cts;
+            await MoveToX(reader, 1150, cts.Token, TimingConsts.TimeToComeInLibrary);
+        }
+
+        public async void OnReaderJoinedQueue(int readerId, int workerId)
+        {
+            if (!_readers.TryGetValue(readerId, out var reader)) return;
+
+            CancelReaderMovement(readerId);
+
+            int targetY = _heightOfLibrarians[workerId];
+            int targetX;
+
+            lock (_syncNextPosition)
+            {
+                targetX = _queueXPositions[_idFreePositionForReader[workerId]];
+                _idFreePositionForReader[workerId]++;
+            }
+
+            var cts = new CancellationTokenSource();
+            _readerMovements[readerId] = cts;
+
+            await MoveToY(reader, targetY, cts.Token, TimingConsts.TimeToTakePlaceInQueue - 700);
+            await MoveToX(reader, targetX, cts.Token, TimingConsts.TimeToTakePlaceInQueue - 300);
+        }
+
+        #region swap images
         public void OnReaderStartedDialogueWithWorker(int readerId, int workerId)
         {
-            // CreateMessageFromWorker
-            // with text "Что вы хотите?"
-            // where Worker = workerId
+            _librarianAnswers[workerId].Image = Properties.Resources.WhatYouWant;
         }
 
-        public void OnReaderAskedForBook(int readerId)
+        public void OnReaderAskedForBook(int readerId, int workerId)
         {
-            // CreateMessageFromReader
-            // with text "Хочу взять книгу"
-            // where Reader = readerId
+            _readerAnswers[workerId].Image = Properties.Resources.WannaTakeBook;
         }
 
-        public void OnReaderAskedForReturnBook(int readerId)
+        public void OnReaderAskedForReturnBook(int readerId, int workerId)
         {
-            // CreateMessageFromReader
-            // with text "Хочу вернуть книгу"
-            // where Reader = readerId
+            _readerAnswers[workerId].Image = Properties.Resources.WannaReturnBook;
         }
 
         public void OnWorkerDeclineRequest(int readerId, int workerId)
         {
-            // CreateMessageFromWorker
-            // with text "Вам отказано!"
-            // where Worker = workerId
+            _librarianAnswers[workerId].Image = Properties.Resources.RequestDeclined;
         }
 
         public void OnWorkerAcceptRequest(int readerId, int workerId)
         {
-            // CreateMessageFromWorker
-            // with text "Да, хорошо!"
-            // where Worker = workerId
+            _librarianAnswers[workerId].Image = Properties.Resources.YesOk;
         }
-
-        public void OnWorkerGoingToReturnBook(int workerId)
-        {
-            // WorkerMoveToLibrary
-            // where Worker = workerId
-        }
-
         public void OnWorkerReturnedBookToLibrary(int workerId)
         {
-            // Убираем книгу из рук рабочего
-            // where Worker = workerId
+            _librarians[workerId].Image = Properties.Resources.Employee;
         }
-
-        public void OnWorkerReturningToAcceptRequests(int workerId)
-        {
-            //WorkerMoveToHisStoika
-            // where Worker = workerId
-        }
-
         public void OnWorkerFoundBook(int workerId)
         {
-            //CreateMessageFromWorker
-            // with text = "Книга в наличии"
+            _librarianAnswers[workerId].Image = Properties.Resources.BookExist;
         }
-
-        public void OnWorkerGoingToTakeBook(int workerId)
-        {
-            // WorkerMoveToLibrary
-            // where Worker = workerId
-        }
-
         public void OnWorkerTookBookInLibrary(int workerId)
         {
-            // Добавляем книгу в руки рабочего
-            // where Worker = workerId
+            _librarians[workerId].Image = Properties.Resources.EmployeeWithBook;
         }
 
         public void OnWorkerNotFoundBook(int workerId)
         {
-            //CreateMessageFromWorker
-            // with text = "Книги нет в наличии"
+            _librarianAnswers[workerId].Image = Properties.Resources.BookNotExist;
         }
 
         public void OnReaderTookBook(int readerId, int workerId)
         {
-            // Добавляем книгу в руки читателя
-            // Убираем книгу из рук рабочего
+            _readers[readerId].Image = Properties.Resources.ReaderWithBook;// Добавляем книгу в руки читателя
+            _librarians[workerId].Image = Properties.Resources.Employee;// Убираем книгу из рук рабочего
         }
-
         public void OnReaderGaveBook(int readerId, int workerId)
         {
-            // Добавляем книгу в руки рабочего
-            // Убираем книгу из рук читателя
+            _readers[readerId].Image = Properties.Resources.Reader;
+            _librarians[workerId].Image = Properties.Resources.EmployeeWithBook;
         }
 
-        public void OnReaderBecameHappy(int readerId)
+        public void OnReaderBecameHappy(int readerId, int workerId)
         {
-            //CreateMessageFromReader
-            // with text = "Я ДОБРИ <3"
+            _readerAnswers[workerId].Image = Properties.Resources.ReaderHappy;
         }
 
-        public void OnReaderBecameAngry(int readerId)
+        public void OnReaderBecameAngry(int readerId, int workerId)
         {
-            //CreateMessageFromReader
-            // with text = "Я ЗЛОЙ"
+            _readerAnswers[workerId].Image = Properties.Resources.ReaderAngry;
         }
 
-        public void OnReaderEndedDialogueWithWorker(int readerId, int workerId)
+        public async void OnReaderEndedDialogueWithWorker(int readerId, int workerId)
         {
-            //CreateMessageFromWorker
-            // with text = "До свидания"
-            // MoveOtherReadersInQueue
+            _librarianAnswers[workerId].Image = Properties.Resources.Goodbye;
+
+            var reader = _readers[readerId];
+            CancelReaderMovement(readerId);
+
+            bool exitUp = reader.Top < this.Height / 2;
+            int exitY = exitUp ? -reader.Height : this.Height + reader.Height;
+
+            var cts = new CancellationTokenSource();
+            _readerMovements[readerId] = cts;
+            await MoveToY(reader, exitY, cts.Token, TimingConsts.TimeToLeaveFromLibrary);
+
+            RemoveReader(readerId, workerId);
+        }
+        #endregion
+        public async void OnWorkerGoingToReturnBook(int workerId)
+        {
+            if (!_librarians.TryGetValue(workerId, out var worker)) return;
+
+            var cts = new CancellationTokenSource();
+            _workerMovements[workerId] = cts;
+
+            await MoveToX(worker, _libraryLocation.X, cts.Token, TimingConsts.TimeToGoToLibrary - 250);
+            await MoveToY(worker, _libraryLocation.Y, cts.Token, TimingConsts.TimeToGoToLibrary - 250);
+        }
+        public async void OnWorkerGoingToTakeBook(int workerId)
+        {
+            if (!_librarians.TryGetValue(workerId, out var worker)) return;
+
+            var cts = new CancellationTokenSource();
+            _workerMovements[workerId] = cts;
+
+            await MoveToX(worker, _libraryLocation.X, cts.Token, TimingConsts.TimeToGoToLibrary - 250);
+            await MoveToY(worker, _libraryLocation.Y, cts.Token, TimingConsts.TimeToGoToLibrary - 250);
         }
 
-        public void OnReaderLeavingFromLibrary(int readerId)
+        public async void OnWorkerReturningToAcceptRequests(int workerId)
         {
-            // ReaderMoveToVoid(up or down)
+            if (!_librarians.TryGetValue(workerId, out var worker)) return;
+
+            var cts = new CancellationTokenSource();
+            _workerMovements[workerId] = cts;
+
+            await MoveToX(worker, _xForLibrarians, cts.Token, TimingConsts.TimeToReturnToStoika - 250);
+            await MoveToY(worker, _heightOfLibrarians[workerId], cts.Token, TimingConsts.TimeToReturnToStoika - 250);
         }
+
+        public async void OnReaderLeavingFromLibrary(int readerId)
+        {
+
+            await UpdateQueueAfterReaderLeft();
+        }
+        private async Task UpdateQueueAfterReaderLeft()
+        {
+            // Группируем читателей по очередям (по Y-координате)
+            var queues = _readers
+                .GroupBy(r => r.Value.Top)
+                .OrderBy(g => g.Key); // Сортируем очереди сверху вниз
+
+            foreach (var queue in queues)
+            {
+                // Сортируем читателей в очереди по X-координате (слева направо)
+                var readersInQueue = queue
+                    .OrderBy(r => r.Value.Left)
+                    .ToList();
+
+                // Обновляем позиции для каждого читателя в очереди
+                for (int i = 0; i < readersInQueue.Count; i++)
+                {
+                    var readerId = readersInQueue[i].Key;
+                    var reader = readersInQueue[i].Value;
+
+                    // Новая позиция должна быть на 150px левее для каждого следующего
+                    int newX = _queueXPositions.First() + (i * 150);
+
+                    // Если позиция не изменилась - пропускаем
+                    if (reader.Left == newX) continue;
+
+                    CancelReaderMovement(readerId);
+
+                    var cts = new CancellationTokenSource();
+                    _readerMovements[readerId] = cts;
+
+                    // Плавное перемещение к новой позиции
+                    await MoveToX(reader, newX, cts.Token, 250);
+                }
+            }
+
+        }
+        private void RemoveReader(int readerId, int workerId)
+        {
+            CancelReaderMovement(readerId);
+            var reader = _readers[readerId];
+
+            lock (_syncNextPosition)
+            {
+                _idFreePositionForReader[workerId]--;
+            }
+            this.InvokeIfRequired(() =>
+            {
+                Controls.Remove(reader);
+                reader.Dispose();
+             });
+        }
+        #region Helper Methods
+        private void InvokeIfRequired(Action action)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(action);
+            else
+                action();
+        }
+        #endregion
+
         #endregion
         public void OnLibraryEvent(LibraryEvents eventType, int ReaderID = -1, int WorkerID = -1)
         {
             Action action = eventType switch
             {
-                LibraryEvents.ReaderComeToLibrary => () => OnReaderComeToLibrary(ReaderID),
+                LibraryEvents.CreateWorker => () => OnCreateWorker(WorkerID),
+                LibraryEvents.ReaderComeToLibraryWithBook => () => OnReaderComeToLibraryWithBook(ReaderID),
+                LibraryEvents.ReaderComeToLibraryWithoutBook => () => OnReaderComeToLibraryWithoutBook(ReaderID),
                 LibraryEvents.ReaderJoinedQueue => () => OnReaderJoinedQueue(ReaderID, WorkerID),
                 LibraryEvents.ReaderStartedDialogueWithWorker => () => OnReaderStartedDialogueWithWorker(ReaderID, WorkerID),
-                LibraryEvents.ReaderAskedForBook => () => OnReaderAskedForBook(ReaderID),
-                LibraryEvents.ReaderAskerForReturnBook => () => OnReaderAskedForReturnBook(ReaderID),
+                LibraryEvents.ReaderAskedForBook => () => OnReaderAskedForBook(ReaderID, WorkerID),
+                LibraryEvents.ReaderAskerForReturnBook => () => OnReaderAskedForReturnBook(ReaderID, WorkerID),
                 LibraryEvents.WorkerDeclineRequest => () => OnWorkerDeclineRequest(ReaderID, WorkerID),
                 LibraryEvents.WorkerAcceptRequest => () => OnWorkerAcceptRequest(ReaderID, WorkerID),
                 LibraryEvents.WorkerGoingToReturnBook => () => OnWorkerGoingToReturnBook(WorkerID),
@@ -194,13 +401,14 @@ namespace LibrarySimulation.Presentation.Views
                 LibraryEvents.WorkerNotFoundBook => () => OnWorkerNotFoundBook(WorkerID),
                 LibraryEvents.ReaderTookBook => () => OnReaderTookBook(ReaderID, WorkerID),
                 LibraryEvents.ReaderGaveBook => () => OnReaderGaveBook(ReaderID, WorkerID),
-                LibraryEvents.ReaderBecameHappy => () => OnReaderBecameHappy(ReaderID),
-                LibraryEvents.ReaderBecameAngry => () => OnReaderBecameAngry(ReaderID),
+                LibraryEvents.ReaderBecameHappy => () => OnReaderBecameHappy(ReaderID, WorkerID),
+                LibraryEvents.ReaderBecameAngry => () => OnReaderBecameAngry(ReaderID, WorkerID),
                 LibraryEvents.ReaderEndedDialogueWithWorker => () => OnReaderEndedDialogueWithWorker(ReaderID, WorkerID),
                 LibraryEvents.ReaderLeavingFromLibrary => () => OnReaderLeavingFromLibrary(ReaderID),
                 _ => () => { }
             };
-            action();
+            this.InvokeIfRequired(() => action());
+ 
         }
     }
 }

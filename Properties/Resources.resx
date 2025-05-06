@@ -118,25 +118,58 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Reader" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\reader.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="WannaReturnBook" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\WannaReturnBook.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Employee" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\Employee.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="EmployeeWithBook" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\EmployeeWithBook.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="RequestDeclined" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\RequestDeclined.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Library" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\Library.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Reader" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\Reader.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="ReaderHappy" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\ReaderHappy.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BookNotExist" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\BookNotExist.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BookExist" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\BookExist.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EmployeeWithBook" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\EmployeeWithBook.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WhatYouWant" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\WhatYouWant.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Employee" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\Employee.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ReaderWithBook" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\ReaderWithBook.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Stoika" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\Stoika.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Reader" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\Reader.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WannaTakeBook" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\WannaTakeBook.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Goodbye" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\Goodbye.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RequestDeclined1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\RequestDeclined.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="YesOk" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\YesOk.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ReaderAngry" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\ReaderAngry.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Library1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\Library.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

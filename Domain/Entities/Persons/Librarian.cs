@@ -30,13 +30,14 @@ namespace LibrarySimulation.Domain.Entities.Persons
             {
                 if (ReaderQueue.Count > 0)
                 {
-                    var reader = ReaderQueue.Dequeue();
+                    var reader = ReaderQueue.Peek();
 
                     //Оповещает о том, что рабочий начал диалог с читателем
                     _library.Notify(LibraryEvents.ReaderStartedDialogueWithWorker, WorkerID: Id);
                     
                     ProcessReaderRequests(reader, _library.today);
 
+                    ReaderQueue.Dequeue();
                 }
                 Thread.Sleep(100);//задержка между проверками
             }
@@ -47,30 +48,32 @@ namespace LibrarySimulation.Domain.Entities.Persons
 
             while(count > 0)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(200);
 
                 Request reader_request = reader.Requests.Dequeue();
                 RequestStatus requestStatus;
 
                 if (reader_request.RequestType == RequestType.Return)
                 {
-                    _library.Notify(LibraryEvents.ReaderAskerForReturnBook, reader.Id);
+                    _library.Notify(LibraryEvents.ReaderAskerForReturnBook, reader.Id, Id);
                     requestStatus = ProcessReturnRequest(reader.Id, reader_request);
                 }
                 else
                 { 
-                    _library.Notify(LibraryEvents.ReaderAskedForBook, reader.Id);
+                    _library.Notify(LibraryEvents.ReaderAskedForBook, reader.Id, Id);
                     requestStatus = ProcessTakeRequest(reader.Id, reader_request, today);
                 }
+                
+                Thread.Sleep(150);
 
                 if (requestStatus == RequestStatus.Rejected)
-                    _library.Notify(LibraryEvents.ReaderBecameAngry, reader.Id);
+                    _library.Notify(LibraryEvents.ReaderBecameAngry, reader.Id, Id);
                 else
-                    _library.Notify(LibraryEvents.ReaderBecameHappy, reader.Id);
+                    _library.Notify(LibraryEvents.ReaderBecameHappy, reader.Id, Id);
 
                 count--;
 
-                Thread.Sleep(100);
+                Thread.Sleep(150);
             }
 
             _library.Notify(LibraryEvents.ReaderEndedDialogueWithWorker, reader.Id, Id);
@@ -170,10 +173,13 @@ namespace LibrarySimulation.Domain.Entities.Persons
 
             if (checkExistionOfBook(request.Publication))
             {
+                Thread.Sleep(200);
                 requestStatus = RequestStatus.Approved;
 
                 //Оповещаем, что читатель отдал книгу
                 _library.Notify(LibraryEvents.ReaderGaveBook, ReaderID: readerId, WorkerID: Id);
+
+                Thread.Sleep(200);
 
                 //Оповещаем, что рабочий идёт возвращать книгу
                 _library.Notify(LibraryEvents.WorkerGoingToReturnBook, WorkerID: Id);

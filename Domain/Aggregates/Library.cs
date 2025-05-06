@@ -11,6 +11,7 @@ using LibrarySimulation.Domain.Services.Factories;
 using System.Diagnostics;
 using LibrarySimulation.Domain.Entities.Persons;
 using LibrarySimulation.Core.Interfaces;
+using LibrarySimulation.Core;
 
 namespace LibrarySimulation.Domain.Aggregates
 {
@@ -58,9 +59,13 @@ namespace LibrarySimulation.Domain.Aggregates
                 Notify(LibraryEvents.ReaderComeToLibraryWithBook, reader.Id);
             else
                 Notify(LibraryEvents.ReaderComeToLibraryWithoutBook, reader.Id);
-                Thread.Sleep(1000);
+            
+            Thread.Sleep(TimingConsts.TimeToGoToLibrary);
+
             Librarian worker = GetLeastBusyLibrarian();
             Notify(LibraryEvents.ReaderJoinedQueue, reader.Id, WorkerID: worker.Id);
+            Thread.Sleep(TimingConsts.TimeToTakePlaceInQueue);
+            
             worker.ReaderQueue.Enqueue(reader);
         }
         #endregion

@@ -28,32 +28,40 @@
         /// </summary>
         private void InitializeComponent()
         {
-            Librarian1 = new PictureBox();
+            Librarian2 = new PictureBox();
             polka1 = new PictureBox();
             polka2 = new PictureBox();
             BookShell = new PictureBox();
-            pictureBox1 = new PictureBox();
-            ((System.ComponentModel.ISupportInitialize)Librarian1).BeginInit();
+            Librarian1 = new PictureBox();
+            LibrarianAnswer1 = new PictureBox();
+            ReaderAnswer1 = new PictureBox();
+            LibrarianAnswer2 = new PictureBox();
+            ReaderAnswer2 = new PictureBox();
+            ((System.ComponentModel.ISupportInitialize)Librarian2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)BookShell).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)Librarian1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)LibrarianAnswer1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)ReaderAnswer1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)LibrarianAnswer2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)ReaderAnswer2).BeginInit();
             SuspendLayout();
             // 
-            // Librarian1
+            // Librarian2
             // 
-            Librarian1.Image = Properties.Resources.Employee;
-            Librarian1.Location = new Point(388, 375);
-            Librarian1.Name = "Librarian1";
-            Librarian1.Size = new Size(114, 137);
-            Librarian1.SizeMode = PictureBoxSizeMode.StretchImage;
-            Librarian1.TabIndex = 0;
-            Librarian1.TabStop = false;
+            Librarian2.Image = Properties.Resources.Employee;
+            Librarian2.Location = new Point(400, 415);
+            Librarian2.Name = "Librarian2";
+            Librarian2.Size = new Size(120, 140);
+            Librarian2.SizeMode = PictureBoxSizeMode.StretchImage;
+            Librarian2.TabIndex = 0;
+            Librarian2.TabStop = false;
             // 
             // polka1
             // 
             polka1.Image = Properties.Resources.Stoika;
-            polka1.Location = new Point(478, 173);
+            polka1.Location = new Point(502, 182);
             polka1.Name = "polka1";
             polka1.Size = new Size(120, 78);
             polka1.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -63,7 +71,7 @@
             // polka2
             // 
             polka2.Image = Properties.Resources.Stoika;
-            polka2.Location = new Point(478, 434);
+            polka2.Location = new Point(502, 477);
             polka2.Name = "polka2";
             polka2.Size = new Size(120, 78);
             polka2.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -72,51 +80,99 @@
             // 
             // BookShell
             // 
-            BookShell.Image = Properties.Resources.Library;
-            BookShell.Location = new Point(-179, 120);
+            BookShell.Image = Properties.Resources.Library1;
+            BookShell.Location = new Point(-68, 166);
             BookShell.Name = "BookShell";
-            BookShell.Size = new Size(417, 243);
+            BookShell.Size = new Size(169, 243);
             BookShell.SizeMode = PictureBoxSizeMode.StretchImage;
             BookShell.TabIndex = 4;
             BookShell.TabStop = false;
             // 
-            // pictureBox1
+            // Librarian1
             // 
-            pictureBox1.Image = Properties.Resources.Employee;
-            pictureBox1.Location = new Point(388, 114);
-            pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(114, 137);
-            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox1.TabIndex = 6;
-            pictureBox1.TabStop = false;
+            Librarian1.Image = Properties.Resources.Employee;
+            Librarian1.Location = new Point(400, 120);
+            Librarian1.Name = "Librarian1";
+            Librarian1.Size = new Size(120, 140);
+            Librarian1.SizeMode = PictureBoxSizeMode.StretchImage;
+            Librarian1.TabIndex = 6;
+            Librarian1.TabStop = false;
+            // 
+            // LibrarianAnswer1
+            // 
+            LibrarianAnswer1.Location = new Point(400, 52);
+            LibrarianAnswer1.Name = "LibrarianAnswer1";
+            LibrarianAnswer1.Size = new Size(125, 62);
+            LibrarianAnswer1.SizeMode = PictureBoxSizeMode.StretchImage;
+            LibrarianAnswer1.TabIndex = 7;
+            LibrarianAnswer1.TabStop = false;
+            // 
+            // ReaderAnswer1
+            // 
+            ReaderAnswer1.Location = new Point(620, 52);
+            ReaderAnswer1.Name = "ReaderAnswer1";
+            ReaderAnswer1.Size = new Size(125, 62);
+            ReaderAnswer1.SizeMode = PictureBoxSizeMode.StretchImage;
+            ReaderAnswer1.TabIndex = 8;
+            ReaderAnswer1.TabStop = false;
+            // 
+            // LibrarianAnswer2
+            // 
+            LibrarianAnswer2.Location = new Point(400, 347);
+            LibrarianAnswer2.Name = "LibrarianAnswer2";
+            LibrarianAnswer2.Size = new Size(125, 62);
+            LibrarianAnswer2.SizeMode = PictureBoxSizeMode.StretchImage;
+            LibrarianAnswer2.TabIndex = 9;
+            LibrarianAnswer2.TabStop = false;
+            // 
+            // ReaderAnswer2
+            // 
+            ReaderAnswer2.Location = new Point(620, 347);
+            ReaderAnswer2.Name = "ReaderAnswer2";
+            ReaderAnswer2.Size = new Size(125, 62);
+            ReaderAnswer2.SizeMode = PictureBoxSizeMode.StretchImage;
+            ReaderAnswer2.TabIndex = 10;
+            ReaderAnswer2.TabStop = false;
             // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
-            ClientSize = new Size(1179, 524);
-            Controls.Add(pictureBox1);
+            ClientSize = new Size(1179, 586);
+            Controls.Add(ReaderAnswer2);
+            Controls.Add(LibrarianAnswer2);
+            Controls.Add(ReaderAnswer1);
+            Controls.Add(LibrarianAnswer1);
             Controls.Add(Librarian1);
+            Controls.Add(Librarian2);
             Controls.Add(BookShell);
             Controls.Add(polka2);
             Controls.Add(polka1);
             Name = "LibraryForm";
             Text = "LibraryForm";
-            ((System.ComponentModel.ISupportInitialize)Librarian1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)Librarian2).EndInit();
             ((System.ComponentModel.ISupportInitialize)polka1).EndInit();
             ((System.ComponentModel.ISupportInitialize)polka2).EndInit();
             ((System.ComponentModel.ISupportInitialize)BookShell).EndInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)Librarian1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)LibrarianAnswer1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)ReaderAnswer1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)LibrarianAnswer2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)ReaderAnswer2).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
 
-        private PictureBox Librarian1;
+        private PictureBox Librarian2;
         private PictureBox polka1;
         private PictureBox polka2;
         private PictureBox BookShell;
-        private PictureBox pictureBox1;
+        private PictureBox Librarian1;
+        private PictureBox LibrarianAnswer1;
+        private PictureBox ReaderAnswer1;
+        private PictureBox LibrarianAnswer2;
+        private PictureBox ReaderAnswer2;
     }
 }

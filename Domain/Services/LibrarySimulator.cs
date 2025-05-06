@@ -1,4 +1,5 @@
-﻿using LibrarySimulation.Core.Enums;
+﻿using LibrarySimulation.Core;
+using LibrarySimulation.Core.Enums;
 using LibrarySimulation.Domain.Aggregates;
 using LibrarySimulation.Domain.Entities;
 using LibrarySimulation.Domain.Entities.Persons;
@@ -179,7 +180,7 @@ namespace LibrarySimulation.Domain.Services
                 }
 
                 // Имитация работы библиотеки (читатели приходят и уходят)
-                Thread.Sleep(5000); // Пауза между днями
+                Thread.Sleep(TimingConsts.TimeBetweenDays); // Пауза между днями
             }
         }
     }
