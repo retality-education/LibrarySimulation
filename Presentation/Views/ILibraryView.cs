@@ -11,6 +11,7 @@ namespace LibrarySimulation.Presentation.Views
 {
     internal interface ILibraryView : IObserver
     {
+        void OnDateChanged(int date);
         void OnLibraryRefilled();
 
         void OnCountOfLostPublicationsChanged(int count);

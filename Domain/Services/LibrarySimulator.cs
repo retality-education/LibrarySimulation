@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Timer = System.Threading.Timer;
 
@@ -178,6 +179,7 @@ namespace LibrarySimulation.Domain.Services
             {
                 // Увеличиваем день
                 _library.today = _library.today.AddDays(15);
+                _library.Notify(LibraryEvents.DateChanged, _library.today.Year * 10000 + _library.today.Month * 100 + _library.today.Day);
 
                 lock (SyncHelper.ChangeCountOfLostPublications)
                 {

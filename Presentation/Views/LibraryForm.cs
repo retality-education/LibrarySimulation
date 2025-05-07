@@ -471,6 +471,15 @@ namespace LibrarySimulation.Presentation.Views
         {
             CountOfAvailablePublications.Text = $"Кол-во доступных публикаций:{count}";
         }
+        public void OnDateChanged(int date)
+        {
+            DateTime restoredDate = new DateTime(
+                date / 10000,        // Год (2025)
+                (date / 100) % 100,  // Месяц (1)
+                date % 100           // День (1)
+            );
+            CurrentDate.Text = $"Текущая дата: {restoredDate.ToString("dd.MM.yyyy")}" ;
+        }
 
         #region Helper Methods
         private void InvokeIfRequired(Action action)
@@ -487,6 +496,7 @@ namespace LibrarySimulation.Presentation.Views
         {
             Action action = eventType switch
             {
+                LibraryEvents.DateChanged => () => OnDateChanged(ReaderID),
                 LibraryEvents.LibraryRefilled => () => OnLibraryRefilled(),
                 LibraryEvents.CountOfLostPublicationsChanged => () => OnCountOfLostPublicationsChanged(ReaderID),
                 LibraryEvents.CountOfAvailablePublicationsChanged => () => OnCountOfAvailablePublicationsChanged(ReaderID),

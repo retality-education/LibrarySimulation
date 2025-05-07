@@ -40,6 +40,7 @@
             gruzovik = new PictureBox();
             CountOfLostPublications = new Label();
             CountOfAvailablePublications = new Label();
+            CurrentDate = new Label();
             ((System.ComponentModel.ISupportInitialize)Librarian2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka2).BeginInit();
@@ -168,12 +169,23 @@
             CountOfAvailablePublications.TabIndex = 13;
             CountOfAvailablePublications.Text = "Кол-во доступных публикаций: 0";
             // 
+            // CurrentDate
+            // 
+            CurrentDate.AutoSize = true;
+            CurrentDate.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 204);
+            CurrentDate.Location = new Point(876, 9);
+            CurrentDate.Name = "CurrentDate";
+            CurrentDate.Size = new Size(137, 25);
+            CurrentDate.TabIndex = 14;
+            CurrentDate.Text = "Текущая дата:";
+            // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
             ClientSize = new Size(1162, 671);
+            Controls.Add(CurrentDate);
             Controls.Add(CountOfAvailablePublications);
             Controls.Add(CountOfLostPublications);
             Controls.Add(gruzovik);
@@ -216,5 +228,6 @@
         private PictureBox gruzovik;
         private Label CountOfLostPublications;
         private Label CountOfAvailablePublications;
+        private Label CurrentDate;
     }
 }
