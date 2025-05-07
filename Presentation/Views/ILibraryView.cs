@@ -11,6 +11,8 @@ namespace LibrarySimulation.Presentation.Views
 {
     internal interface ILibraryView : IObserver
     {
+        void OnLibraryRefilled();
+
         void OnCreateWorker(int WorkerId);
 
         // Читатель пришел в библиотеку с книгой

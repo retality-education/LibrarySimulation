@@ -37,6 +37,7 @@
             ReaderAnswer1 = new PictureBox();
             LibrarianAnswer2 = new PictureBox();
             ReaderAnswer2 = new PictureBox();
+            gruzovik = new PictureBox();
             ((System.ComponentModel.ISupportInitialize)Librarian2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka2).BeginInit();
@@ -46,6 +47,7 @@
             ((System.ComponentModel.ISupportInitialize)ReaderAnswer1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)LibrarianAnswer2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ReaderAnswer2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gruzovik).BeginInit();
             SuspendLayout();
             // 
             // Librarian2
@@ -134,12 +136,23 @@
             ReaderAnswer2.TabIndex = 10;
             ReaderAnswer2.TabStop = false;
             // 
+            // gruzovik
+            // 
+            gruzovik.Image = Properties.Resources.gruzovik;
+            gruzovik.Location = new Point(2, 654);
+            gruzovik.Name = "gruzovik";
+            gruzovik.Size = new Size(233, 186);
+            gruzovik.SizeMode = PictureBoxSizeMode.StretchImage;
+            gruzovik.TabIndex = 11;
+            gruzovik.TabStop = false;
+            // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
             ClientSize = new Size(1162, 671);
+            Controls.Add(gruzovik);
             Controls.Add(ReaderAnswer2);
             Controls.Add(LibrarianAnswer2);
             Controls.Add(ReaderAnswer1);
@@ -160,6 +173,7 @@
             ((System.ComponentModel.ISupportInitialize)ReaderAnswer1).EndInit();
             ((System.ComponentModel.ISupportInitialize)LibrarianAnswer2).EndInit();
             ((System.ComponentModel.ISupportInitialize)ReaderAnswer2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gruzovik).EndInit();
             ResumeLayout(false);
         }
 
@@ -174,5 +188,6 @@
         private PictureBox ReaderAnswer1;
         private PictureBox LibrarianAnswer2;
         private PictureBox ReaderAnswer2;
+        private PictureBox gruzovik;
     }
 }

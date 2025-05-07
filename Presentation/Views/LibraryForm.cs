@@ -436,6 +436,16 @@ namespace LibrarySimulation.Presentation.Views
             }
         }
 
+        public async void OnLibraryRefilled()
+        {
+
+            await MoveToY(gruzovik, 430, new CancellationToken());
+
+            await Task.Delay(300);
+
+            await MoveToY(gruzovik, 650, new CancellationToken());
+        }
+
         #region Helper Methods
         private void InvokeIfRequired(Action action)
         {
@@ -451,6 +461,7 @@ namespace LibrarySimulation.Presentation.Views
         {
             Action action = eventType switch
             {
+                LibraryEvents.LibraryRefilled => () => OnLibraryRefilled(),
                 LibraryEvents.CreateWorker => () => OnCreateWorker(WorkerID),
                 LibraryEvents.ReaderComeToLibraryWithBook => () => OnReaderComeToLibraryWithBook(ReaderID),
                 LibraryEvents.ReaderComeToLibraryWithoutBook => () => OnReaderComeToLibraryWithoutBook(ReaderID),

@@ -21,8 +21,7 @@ namespace LibrarySimulation.Domain.Services
         public Library _library { get; private set; }
         private Random _random = new Random();
         private int _readersCount;
-        private List<Reader> _allReaders = new ();
-        private Dictionary<int, List<Publication>> _readerBorrowedBooks = new ();
+        private List<Reader> _allReaders = new();
 
         public LibrarySimulator(Library library)
         {
@@ -141,7 +140,7 @@ namespace LibrarySimulation.Domain.Services
 
             // Получаем список взятых книг
 
-            
+
             var borrowedBooks = _library.Publications
                 .Where(x => x.owners.ContainsKey(reader.Id))
                 .Select(x => x.Publication)
@@ -172,6 +171,7 @@ namespace LibrarySimulation.Domain.Services
         private void StartSimulation()
         {
             InitializeLibrarians();
+            Task.Run(() => refillLibrary());
             while (true)
             {
                 // Увеличиваем день
@@ -190,6 +190,25 @@ namespace LibrarySimulation.Domain.Services
 
                 // Имитация работы библиотеки (читатели приходят и уходят)
                 Thread.Sleep(TimingConsts.TimeBetweenDays); // Пауза между днями
+            }
+        }
+        private void refillLibrary()
+        {
+            while (true)
+            {
+                Thread.Sleep(25000);
+
+                
+
+                var temp = _library.Publications.Select(x => (x, x.CountOfMissingBooks(_library.today))).Where(x => x.Item2 > 0).ToList();
+                if (temp.Count > 0)
+                {
+                    _library.Notify(LibraryEvents.LibraryRefilled);
+                    foreach (var x in temp)
+                    {
+                        x.Item1.AddCopiesOfPublication(x.Item2);
+                    }
+                }
             }
         }
     }

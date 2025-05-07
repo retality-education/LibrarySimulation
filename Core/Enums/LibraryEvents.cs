@@ -8,6 +8,8 @@ namespace LibrarySimulation.Core.Enums
 {
     internal enum LibraryEvents
     {
+        LibraryRefilled,
+
         CreateWorker, 
 
         ReaderComeToLibraryWithBook,
