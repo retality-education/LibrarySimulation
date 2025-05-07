@@ -37,7 +37,7 @@ namespace LibrarySimulation.Domain.Aggregates
             lock (SyncHelper.ChangeCountOfAvailablePublications)
             {
                 CountOfAvailablePublications += count;
-                Notify(LibraryEvents.CountOfAvailablePublicationsChanged, count);
+                Notify(LibraryEvents.CountOfAvailablePublicationsChanged, CountOfAvailablePublications);
             }
 
             Publications.Add(temp);
