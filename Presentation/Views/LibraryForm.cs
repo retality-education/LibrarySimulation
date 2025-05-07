@@ -63,65 +63,78 @@ namespace LibrarySimulation.Presentation.Views
         #region Movement Logic
         private async Task MoveToY(PictureBox pictureBox, int targetY, CancellationToken token, int durationMs = 500)
         {
-            int startY = pictureBox.Top;
-            float distance = targetY - startY;
-            int steps = Math.Max(1, durationMs / 16); // ~60 FPS
-            float stepY = distance / steps;
-
-            for (int i = 1; i <= steps; i++)
+            try
             {
-                try
+                if (token.IsCancellationRequested)
+                    return;
+
+                int startY = pictureBox.Top;
+                float distance = targetY - startY;
+                int steps = Math.Max(1, durationMs / 16); // ~60 FPS
+                float stepY = distance / steps;
+
+                for (int i = 1; i <= steps; i++)
                 {
-                    token.ThrowIfCancellationRequested();
-                }catch (Exception e) {  }
+                    if (token.IsCancellationRequested)
+                        break;
                     int newY = startY + (int)(stepY * i);
 
-                this.InvokeIfRequired(() => pictureBox.Top = newY);
-                try
-                {
-                    await Task.Delay(16, token); // Фиксированный интервал для плавности
-                }catch (Exception e) { }
-             }
+                    this.InvokeIfRequired(() => pictureBox.Top = newY);
+                    try
+                    {
+                        await Task.Delay(16, token); // Фиксированный интервал для плавности
+                    }
+                    catch (Exception e) { }
+                }
 
 
-            // Финализация позиции
-            this.InvokeIfRequired(() => pictureBox.Top = targetY);
+                // Финализация позиции
+                this.InvokeIfRequired(() => pictureBox.Top = targetY);
+            }
+            catch (Exception) { }
         }
 
         private async Task MoveToX(PictureBox pictureBox, int targetX, CancellationToken token, int durationMs = 500)
         {
-            int startX = pictureBox.Left;
-            float distance = targetX - startX;
-            int steps = Math.Max(1, durationMs / 16); // ~60 FPS
-            float stepX = distance / steps;
-
-            for (int i = 1; i <= steps; i++)
+            try
             {
-                try
-                {
-                    token.ThrowIfCancellationRequested();
-                }
-                catch (Exception ex) { }
-                int newX = startX + (int)(stepX * i);
+                if (token.IsCancellationRequested)
+                    return; // Если токен уже отменён, выходим
 
-                this.InvokeIfRequired(() => pictureBox.Left = newX);
-                try
+                int startX = pictureBox.Left;
+                float distance = targetX - startX;
+                int steps = Math.Max(1, durationMs / 16); // ~60 FPS
+                float stepX = distance / steps;
+
+                for (int i = 1; i <= steps; i++)
                 {
-                    await Task.Delay(16, token);
+                    if (token.IsCancellationRequested)
+                        break;
+                    int newX = startX + (int)(stepX * i);
+
+                    this.InvokeIfRequired(() => pictureBox.Left = newX);
+                    try
+                    {
+                        await Task.Delay(16, token);
+                    }
+                    catch (Exception ex) { }
                 }
-                catch (Exception ex) { }
+
+                // Финализация позиции
+                this.InvokeIfRequired(() => pictureBox.Left = targetX);
             }
-
-            // Финализация позиции
-            this.InvokeIfRequired(() => pictureBox.Left = targetX);
+            catch (Exception) {}
         }
 
         private void CancelReaderMovement(int readerId)
         {
             if (_readerMovements.TryRemove(readerId, out var cts))
             {
-                cts.Cancel();
-                cts.Dispose();
+                try
+                {
+                    cts.Cancel();
+                }
+                catch (ObjectDisposedException) { }
             }
         }
         #endregion
@@ -148,7 +161,7 @@ namespace LibrarySimulation.Presentation.Views
             {
                 Size = new Size(80, 220),
                 SizeMode = PictureBoxSizeMode.StretchImage,
-                Location = new Point(1200, 245)
+                Location = new Point(1200, 270)
             };
         }
 
@@ -296,9 +309,11 @@ namespace LibrarySimulation.Presentation.Views
         }
         public async void OnReaderEndedDialogueWithWorker(int readerId, int workerId)
         {
+            if (!_readers.TryGetValue(readerId, out var reader))
+                return;
             _librarianAnswers[workerId].Image = Properties.Resources.Goodbye;
 
-            var reader = _readers[readerId];
+
             CancelReaderMovement(readerId);
 
             bool exitUp = reader.Top < this.Height / 2;
@@ -306,9 +321,19 @@ namespace LibrarySimulation.Presentation.Views
 
             var cts = new CancellationTokenSource();
             _readerMovements[readerId] = cts;
-            await MoveToY(reader, exitY, cts.Token, TimingConsts.TimeToLeaveFromLibrary);
-
-            RemoveReader(readerId, workerId);
+            try
+            {
+                await MoveToY(reader, exitY, cts.Token, TimingConsts.TimeToLeaveFromLibrary);
+            }
+            finally
+            {
+                // Освобождаем ресурсы только после завершения движения
+                if (_readerMovements.TryRemove(readerId, out var oldCts))
+                {
+                    oldCts.Dispose();
+                }
+                RemoveReader(readerId, workerId);
+            }
         }
         public async void OnReaderLeavingFromLibrary(int readerId, int workerId)
         {
@@ -319,7 +344,7 @@ namespace LibrarySimulation.Presentation.Views
         {
             // Группируем читателей по очередям (по Y-координате)
             var queues = _readers
-               .Where(x => x.Value.Top == _heightOfLibrarians[WorkerId])
+               .Where(x => Math.Abs(x.Value.Top -_heightOfLibrarians[WorkerId]) < 150)
               .OrderBy(g => g.Value.Left)
               .ToList();  // Сортируем очереди сверху вниз
 

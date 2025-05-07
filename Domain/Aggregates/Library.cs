@@ -73,19 +73,23 @@ namespace LibrarySimulation.Domain.Aggregates
         #region Взаимодействие рабочего с библиотекой
         public void WorkerTookBookInLibrary(Publication publication, int readerId, int workerId, DateTime today)
         {
-            var temp = Publications.First(x => x.Publication == publication);
-            temp.owners[readerId] = today;
-            temp.AvailableCopies--;
-
+            lock (SyncHelper.ChangeInLibrary)
+            {
+                var temp = Publications.First(x => x.Publication == publication);
+                temp.owners[readerId] = today;
+                temp.AvailableCopies--;
+            }
             Notify(LibraryEvents.WorkerTookBookInLibrary, WorkerID: workerId); 
         }
 
         internal void WorkerReturnBookToLibrary(Publication publication, int readerId, int workerId)
         {
-            var temp = Publications.First(x => x.Publication == publication);
-            temp.owners.Remove(readerId);
-            temp.AvailableCopies++;
-
+            lock (SyncHelper.ChangeInLibrary)
+            {
+                var temp = Publications.First(x => x.Publication == publication);
+                temp.owners.Remove(readerId);
+                temp.AvailableCopies++;
+            }
             Notify(LibraryEvents.WorkerReturnedBookToLibrary, WorkerID: workerId);
         }
         #endregion
