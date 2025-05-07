@@ -9,6 +9,10 @@ namespace LibrarySimulation.Core.Enums
     internal enum LibraryEvents
     {
         LibraryRefilled,
+        
+        CountOfLostPublicationsChanged,
+        CountOfAvailablePublicationsChanged,
+
 
         CreateWorker, 
 

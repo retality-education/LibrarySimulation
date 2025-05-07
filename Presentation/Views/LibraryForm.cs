@@ -445,6 +445,14 @@ namespace LibrarySimulation.Presentation.Views
 
             await MoveToY(gruzovik, 650, new CancellationToken());
         }
+        public void OnCountOfLostPublicationsChanged(int count)
+        {
+            CountOfLostPublications.Text = $"Кол-во потерянных публикаций:{count}";
+        }
+        public void OnCountOfAvailablePublicationsChanged(int count)
+        {
+            CountOfAvailablePublications.Text = $"Кол-во доступных публикаций:{count}";
+        }
 
         #region Helper Methods
         private void InvokeIfRequired(Action action)
@@ -462,6 +470,8 @@ namespace LibrarySimulation.Presentation.Views
             Action action = eventType switch
             {
                 LibraryEvents.LibraryRefilled => () => OnLibraryRefilled(),
+                LibraryEvents.CountOfLostPublicationsChanged => () => OnCountOfLostPublicationsChanged(ReaderID),
+                LibraryEvents.CountOfAvailablePublicationsChanged => () => OnCountOfAvailablePublicationsChanged(ReaderID),
                 LibraryEvents.CreateWorker => () => OnCreateWorker(WorkerID),
                 LibraryEvents.ReaderComeToLibraryWithBook => () => OnReaderComeToLibraryWithBook(ReaderID),
                 LibraryEvents.ReaderComeToLibraryWithoutBook => () => OnReaderComeToLibraryWithoutBook(ReaderID),

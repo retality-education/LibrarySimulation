@@ -38,6 +38,8 @@
             LibrarianAnswer2 = new PictureBox();
             ReaderAnswer2 = new PictureBox();
             gruzovik = new PictureBox();
+            CountOfLostPublications = new Label();
+            CountOfAvailablePublications = new Label();
             ((System.ComponentModel.ISupportInitialize)Librarian2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)polka2).BeginInit();
@@ -146,12 +148,34 @@
             gruzovik.TabIndex = 11;
             gruzovik.TabStop = false;
             // 
+            // CountOfLostPublications
+            // 
+            CountOfLostPublications.AutoSize = true;
+            CountOfLostPublications.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 204);
+            CountOfLostPublications.Location = new Point(12, 34);
+            CountOfLostPublications.Name = "CountOfLostPublications";
+            CountOfLostPublications.Size = new Size(320, 25);
+            CountOfLostPublications.TabIndex = 12;
+            CountOfLostPublications.Text = "Кол-во потерянных публикаций: 0";
+            // 
+            // CountOfAvailablePublications
+            // 
+            CountOfAvailablePublications.AutoSize = true;
+            CountOfAvailablePublications.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 204);
+            CountOfAvailablePublications.Location = new Point(12, 9);
+            CountOfAvailablePublications.Name = "CountOfAvailablePublications";
+            CountOfAvailablePublications.Size = new Size(308, 25);
+            CountOfAvailablePublications.TabIndex = 13;
+            CountOfAvailablePublications.Text = "Кол-во доступных публикаций: 0";
+            // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
             ClientSize = new Size(1162, 671);
+            Controls.Add(CountOfAvailablePublications);
+            Controls.Add(CountOfLostPublications);
             Controls.Add(gruzovik);
             Controls.Add(ReaderAnswer2);
             Controls.Add(LibrarianAnswer2);
@@ -175,6 +199,7 @@
             ((System.ComponentModel.ISupportInitialize)ReaderAnswer2).EndInit();
             ((System.ComponentModel.ISupportInitialize)gruzovik).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -189,5 +214,7 @@
         private PictureBox LibrarianAnswer2;
         private PictureBox ReaderAnswer2;
         private PictureBox gruzovik;
+        private Label CountOfLostPublications;
+        private Label CountOfAvailablePublications;
     }
 }

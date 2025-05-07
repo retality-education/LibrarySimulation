@@ -12,5 +12,8 @@ namespace LibrarySimulation.Infrastructure.Helpers
         public static readonly object PersonLock = new object();
         public static readonly object ObserveLock = new object();
         public static readonly object ChangeInLibrary = new object();
+        public static readonly object ChangeCountOfLostPublications = new object();
+        public static readonly object ChangeCountOfAvailablePublications = new object();
+        
     }
 }

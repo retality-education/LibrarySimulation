@@ -26,7 +26,6 @@ namespace LibrarySimulation.Domain.Services
         public LibrarySimulator(Library library)
         {
             _library = library;
-            FillLibraryWithPublications();
         }
         private void FillLibraryWithPublications()
         {
@@ -61,6 +60,7 @@ namespace LibrarySimulation.Domain.Services
 
             foreach (var publication in libraryPublications)
                 _library.AddNewPublication(publication, _random.Next(1, 5));
+
         }
         private void InitializeLibrarians()
         {
@@ -170,13 +170,25 @@ namespace LibrarySimulation.Domain.Services
         }
         private void StartSimulation()
         {
+            FillLibraryWithPublications();
             InitializeLibrarians();
+            
             Task.Run(() => refillLibrary());
             while (true)
             {
                 // Увеличиваем день
                 _library.today = _library.today.AddDays(15);
 
+                lock (SyncHelper.ChangeCountOfLostPublications)
+                {
+                    var lastCount = _library.CountOfLostPublications;
+                    _library.CountOfLostPublications = _library.Publications
+                                                            .Select(x => x.CountOfMissingBooks(_library.today))
+                                                            .Where(x => x > 0)
+                                                            .Sum();
+                    if (lastCount != _library.CountOfLostPublications)
+                        _library.Notify(LibraryEvents.CountOfLostPublicationsChanged, _library.CountOfLostPublications);
+                }
                 int readersToGenerate = GetReadersCountForSeason();
 
                 for (int i = 0; i < readersToGenerate; i++)
@@ -198,15 +210,22 @@ namespace LibrarySimulation.Domain.Services
             {
                 Thread.Sleep(25000);
 
-                
+                var temp = _library.Publications
+                            .Select(x => (x, x.CountOfMissingBooks(_library.today)))
+                            .Where(x => x.Item2 > 0)
+                            .ToList();
 
-                var temp = _library.Publications.Select(x => (x, x.CountOfMissingBooks(_library.today))).Where(x => x.Item2 > 0).ToList();
                 if (temp.Count > 0)
                 {
                     _library.Notify(LibraryEvents.LibraryRefilled);
                     foreach (var x in temp)
                     {
-                        x.Item1.AddCopiesOfPublication(x.Item2);
+                        lock (SyncHelper.ChangeCountOfAvailablePublications)
+                        {
+                            x.Item1.AddCopiesOfPublication(x.Item2);
+                            _library.CountOfAvailablePublications += x.Item2;
+                            _library.Notify(LibraryEvents.CountOfAvailablePublicationsChanged, _library.CountOfAvailablePublications);
+                        }
                     }
                 }
             }

@@ -21,7 +21,8 @@ namespace LibrarySimulation.Domain.Aggregates
         public List<LibraryPublication> Publications { get; } = new ();
         public List<Librarian> Librarians { get; } = new ();
         public DateTime today { get; set; } = new DateTime(2025, 1, 1);
-
+        public int CountOfLostPublications { get; set; } = 0;
+        public int CountOfAvailablePublications { get; set; } = 0;
         public bool isLibraryContainsPublication(Publication publication)
         {
             return Publications.Select(x => x.Publication).Contains(publication);
@@ -32,6 +33,13 @@ namespace LibrarySimulation.Domain.Aggregates
         {
             var temp = new LibraryPublication(publication);
             temp.AddCopiesOfPublication(count);
+
+            lock (SyncHelper.ChangeCountOfAvailablePublications)
+            {
+                CountOfAvailablePublications += count;
+                Notify(LibraryEvents.CountOfAvailablePublicationsChanged, count);
+            }
+
             Publications.Add(temp);
         }
         public void AddCopiesOfPublication(Publication publication, int count)
@@ -79,6 +87,11 @@ namespace LibrarySimulation.Domain.Aggregates
                 temp.owners[readerId] = today;
                 temp.AvailableCopies--;
             }
+            lock (SyncHelper.ChangeCountOfAvailablePublications)
+            {
+                CountOfAvailablePublications--;
+                Notify(LibraryEvents.CountOfAvailablePublicationsChanged, CountOfAvailablePublications);
+            }
             Notify(LibraryEvents.WorkerTookBookInLibrary, WorkerID: workerId); 
         }
 
@@ -87,8 +100,24 @@ namespace LibrarySimulation.Domain.Aggregates
             lock (SyncHelper.ChangeInLibrary)
             {
                 var temp = Publications.First(x => x.Publication == publication);
+
+                lock (SyncHelper.ChangeCountOfLostPublications)
+                {
+                    if (temp.isBookOverBorrowedByPerson(today, readerId))
+                    {
+                        CountOfLostPublications--;
+                        Notify(LibraryEvents.CountOfLostPublicationsChanged, CountOfLostPublications);
+                    }
+                }
+                lock (SyncHelper.ChangeCountOfAvailablePublications)
+                {
+                    CountOfAvailablePublications++;
+                    Notify(LibraryEvents.CountOfAvailablePublicationsChanged, CountOfAvailablePublications);
+                }
                 temp.owners.Remove(readerId);
                 temp.AvailableCopies++;
+
+                
             }
             Notify(LibraryEvents.WorkerReturnedBookToLibrary, WorkerID: workerId);
         }

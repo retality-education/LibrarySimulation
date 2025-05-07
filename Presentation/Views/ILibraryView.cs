@@ -13,6 +13,10 @@ namespace LibrarySimulation.Presentation.Views
     {
         void OnLibraryRefilled();
 
+        void OnCountOfLostPublicationsChanged(int count);
+
+        void OnCountOfAvailablePublicationsChanged(int count);
+
         void OnCreateWorker(int WorkerId);
 
         // Читатель пришел в библиотеку с книгой
