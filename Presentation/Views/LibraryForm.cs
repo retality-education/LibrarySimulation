@@ -138,7 +138,7 @@ namespace LibrarySimulation.Presentation.Views
                 _idFreePositionForReader[workerId] = 0;
                 _idLibrarian++;
 
-                _heightForNextLibrarian += 285;
+                _heightForNextLibrarian += 295;
             }
         }
 
@@ -195,10 +195,10 @@ namespace LibrarySimulation.Presentation.Views
             _readerMovements[readerId] = cts;
 
             await MoveToY(reader, targetY, cts.Token, TimingConsts.TimeToTakePlaceInQueue - 700);
-            await MoveToX(reader, targetX, cts.Token, TimingConsts.TimeToTakePlaceInQueue - 300);
+            await MoveToX(reader, targetX, cts.Token, TimingConsts.TimeToTakePlaceInQueue - 500);
         }
 
-        #region swap images
+        #region just swap images
         public void OnReaderStartedDialogueWithWorker(int readerId, int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.WhatYouWant;
@@ -261,23 +261,6 @@ namespace LibrarySimulation.Presentation.Views
         {
             _readerAnswers[workerId].Image = Properties.Resources.ReaderAngry;
         }
-
-        public async void OnReaderEndedDialogueWithWorker(int readerId, int workerId)
-        {
-            _librarianAnswers[workerId].Image = Properties.Resources.Goodbye;
-
-            var reader = _readers[readerId];
-            CancelReaderMovement(readerId);
-
-            bool exitUp = reader.Top < this.Height / 2;
-            int exitY = exitUp ? -reader.Height : this.Height + reader.Height;
-
-            var cts = new CancellationTokenSource();
-            _readerMovements[readerId] = cts;
-            await MoveToY(reader, exitY, cts.Token, TimingConsts.TimeToLeaveFromLibrary);
-
-            RemoveReader(readerId, workerId);
-        }
         #endregion
         public async void OnWorkerGoingToReturnBook(int workerId)
         {
@@ -307,37 +290,48 @@ namespace LibrarySimulation.Presentation.Views
             var cts = new CancellationTokenSource();
             _workerMovements[workerId] = cts;
 
-            await MoveToX(worker, _xForLibrarians, cts.Token, TimingConsts.TimeToReturnToStoika - 250);
             await MoveToY(worker, _heightOfLibrarians[workerId], cts.Token, TimingConsts.TimeToReturnToStoika - 250);
+            await MoveToX(worker, _xForLibrarians, cts.Token, TimingConsts.TimeToReturnToStoika - 250);
+            
         }
+        public async void OnReaderEndedDialogueWithWorker(int readerId, int workerId)
+        {
+            _librarianAnswers[workerId].Image = Properties.Resources.Goodbye;
 
-        public async void OnReaderLeavingFromLibrary(int readerId)
+            var reader = _readers[readerId];
+            CancelReaderMovement(readerId);
+
+            bool exitUp = reader.Top < this.Height / 2;
+            int exitY = exitUp ? -reader.Height : this.Height + reader.Height;
+
+            var cts = new CancellationTokenSource();
+            _readerMovements[readerId] = cts;
+            await MoveToY(reader, exitY, cts.Token, TimingConsts.TimeToLeaveFromLibrary);
+
+            RemoveReader(readerId, workerId);
+        }
+        public async void OnReaderLeavingFromLibrary(int readerId, int workerId)
         {
 
-            await UpdateQueueAfterReaderLeft();
+            await UpdateQueueAfterReaderLeft(readerId, workerId);
         }
-        private async Task UpdateQueueAfterReaderLeft()
+        private async Task UpdateQueueAfterReaderLeft(int ReaderId, int WorkerId)
         {
             // Группируем читателей по очередям (по Y-координате)
             var queues = _readers
-                .GroupBy(r => r.Value.Top)
-                .OrderBy(g => g.Key); // Сортируем очереди сверху вниз
+               .Where(x => x.Value.Top == _heightOfLibrarians[WorkerId])
+              .OrderBy(g => g.Value.Left)
+              .ToList();  // Сортируем очереди сверху вниз
 
-            foreach (var queue in queues)
-            {
-                // Сортируем читателей в очереди по X-координате (слева направо)
-                var readersInQueue = queue
-                    .OrderBy(r => r.Value.Left)
-                    .ToList();
 
                 // Обновляем позиции для каждого читателя в очереди
-                for (int i = 0; i < readersInQueue.Count; i++)
+                for (int i = 0; i < queues.Count; i++)
                 {
-                    var readerId = readersInQueue[i].Key;
-                    var reader = readersInQueue[i].Value;
+                    var readerId = queues[i].Key;
+                    var reader = queues[i].Value;
 
                     // Новая позиция должна быть на 150px левее для каждого следующего
-                    int newX = _queueXPositions.First() + (i * 150);
+                    int newX = _queueXPositions.First() + (i * 160);
 
                     // Если позиция не изменилась - пропускаем
                     if (reader.Left == newX) continue;
@@ -350,24 +344,26 @@ namespace LibrarySimulation.Presentation.Views
                     // Плавное перемещение к новой позиции
                     await MoveToX(reader, newX, cts.Token, 250);
                 }
-            }
-
         }
         private void RemoveReader(int readerId, int workerId)
         {
             CancelReaderMovement(readerId);
-            var reader = _readers[readerId];
 
             lock (_syncNextPosition)
             {
                 _idFreePositionForReader[workerId]--;
             }
-            this.InvokeIfRequired(() =>
+
+            if (_readers.TryRemove(readerId, out var reader))
             {
-                Controls.Remove(reader);
-                reader.Dispose();
-             });
+                this.InvokeIfRequired(() =>
+                {
+                    Controls.Remove(reader);
+                    reader.Dispose();
+                });
+            }
         }
+
         #region Helper Methods
         private void InvokeIfRequired(Action action)
         {
@@ -404,7 +400,7 @@ namespace LibrarySimulation.Presentation.Views
                 LibraryEvents.ReaderBecameHappy => () => OnReaderBecameHappy(ReaderID, WorkerID),
                 LibraryEvents.ReaderBecameAngry => () => OnReaderBecameAngry(ReaderID, WorkerID),
                 LibraryEvents.ReaderEndedDialogueWithWorker => () => OnReaderEndedDialogueWithWorker(ReaderID, WorkerID),
-                LibraryEvents.ReaderLeavingFromLibrary => () => OnReaderLeavingFromLibrary(ReaderID),
+                LibraryEvents.ReaderLeavingFromLibrary => () => OnReaderLeavingFromLibrary(ReaderID, WorkerID),
                 _ => () => { }
             };
             this.InvokeIfRequired(() => action());

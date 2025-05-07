@@ -74,6 +74,6 @@ namespace LibrarySimulation.Presentation.Views
         void OnReaderEndedDialogueWithWorker(int readerId, int workerId);
 
         // Читатель уходит из библиотеки
-        void OnReaderLeavingFromLibrary(int readerId);
+        void OnReaderLeavingFromLibrary(int readerId, int workerId);
     }
 }

@@ -64,7 +64,7 @@ namespace LibrarySimulation.Domain.Aggregates
 
             Librarian worker = GetLeastBusyLibrarian();
             Notify(LibraryEvents.ReaderJoinedQueue, reader.Id, WorkerID: worker.Id);
-            Thread.Sleep(TimingConsts.TimeToTakePlaceInQueue);
+            Thread.Sleep(TimingConsts.TimeToTakePlaceInQueue + 300);
             
             worker.ReaderQueue.Enqueue(reader);
         }

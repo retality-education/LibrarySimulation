@@ -13,6 +13,6 @@ namespace LibrarySimulation.Core
         public const int TimeToGoToLibrary = 500;
         public const int TimeToReturnToStoika = 500;
         public const int TimeBetweenDays = 10000;
-        public const int TimeToLeaveFromLibrary = 200;
+        public const int TimeToLeaveFromLibrary = 150;
     }
 }

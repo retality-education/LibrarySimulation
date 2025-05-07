@@ -8,8 +8,10 @@ using LibrarySimulation.Infrastructure.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Timer = System.Threading.Timer;
 
 namespace LibrarySimulation.Domain.Services
@@ -97,8 +99,10 @@ namespace LibrarySimulation.Domain.Services
         private RequestType GetRequestTypeBasedOnSeason(int readerId)
         {
             int month = _library.today.Month;
-            bool hasBorrowedBooks = _readerBorrowedBooks.ContainsKey(readerId) &&
-                                  _readerBorrowedBooks[readerId].Count > 0;
+            bool hasBorrowedBooks = _library.Publications
+                            .Where(x => x.owners.ContainsKey(readerId))
+                            .ToList()
+                            .Count > 0;
 
             if (!hasBorrowedBooks) return RequestType.Take;
 
@@ -116,16 +120,17 @@ namespace LibrarySimulation.Domain.Services
         private Reader GetOrCreateReader()
         {
             //
-            if (_allReaders.Count > 0 && _random.Next(10) < 3)
+            var allNonActiveReaders = _allReaders.Where(x => !x.isReaderActive).ToList();
+
+            if (allNonActiveReaders.Count > 0 && _random.Next(10) < 3)
             {
-                return _allReaders[_random.Next(_allReaders.Count)];
+                return allNonActiveReaders[_random.Next(allNonActiveReaders.Count)];
             }
 
             // 
             _readersCount++;
             var newReader = new Reader($"Читатель_{_readersCount}");
             _allReaders.Add(newReader);
-            _readerBorrowedBooks[newReader.Id] = new List<Publication>();
             return newReader;
         }
 
@@ -135,8 +140,12 @@ namespace LibrarySimulation.Domain.Services
             reader.Requests = new PriorityQueue<Request, int>();
 
             // Получаем список взятых книг
-            var borrowedBooks = _readerBorrowedBooks.ContainsKey(reader.Id) ?
-                _readerBorrowedBooks[reader.Id] : new List<Publication>();
+
+            
+            var borrowedBooks = _library.Publications
+                .Where(x => x.owners.ContainsKey(reader.Id))
+                .Select(x => x.Publication)
+                .ToList();
 
             int requestCount = _random.Next(1, 4);
 

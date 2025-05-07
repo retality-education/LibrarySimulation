@@ -1,4 +1,5 @@
-﻿using LibrarySimulation.Core.Enums;
+﻿using LibrarySimulation.Core;
+using LibrarySimulation.Core.Enums;
 using LibrarySimulation.Domain.Aggregates;
 using System;
 using System.Collections.Generic;
@@ -44,11 +45,9 @@ namespace LibrarySimulation.Domain.Entities.Persons
         }
         private void ProcessReaderRequests(Reader reader, DateTime today)
         {
-            int count = reader.Requests.Count;
-
-            while(count > 0)
+            while(reader.Requests.Count > 0)
             {
-                Thread.Sleep(200);
+                Thread.Sleep(400);
 
                 Request reader_request = reader.Requests.Dequeue();
                 RequestStatus requestStatus;
@@ -64,20 +63,27 @@ namespace LibrarySimulation.Domain.Entities.Persons
                     requestStatus = ProcessTakeRequest(reader.Id, reader_request, today);
                 }
                 
-                Thread.Sleep(150);
+                Thread.Sleep(400);
 
                 if (requestStatus == RequestStatus.Rejected)
                     _library.Notify(LibraryEvents.ReaderBecameAngry, reader.Id, Id);
                 else
                     _library.Notify(LibraryEvents.ReaderBecameHappy, reader.Id, Id);
 
-                count--;
-
-                Thread.Sleep(150);
+                Thread.Sleep(450);
             }
 
             _library.Notify(LibraryEvents.ReaderEndedDialogueWithWorker, reader.Id, Id);
-            _library.Notify(LibraryEvents.ReaderLeavingFromLibrary, reader.Id);
+
+            Thread.Sleep(TimingConsts.TimeToLeaveFromLibrary);
+
+            _library.Notify(LibraryEvents.ReaderLeavingFromLibrary, reader.Id, Id);
+           
+            Task.Run(() =>
+            {
+                Task.Delay(500);
+                reader.isReaderActive = false;
+            });
         }
 
 
@@ -107,6 +113,8 @@ namespace LibrarySimulation.Domain.Entities.Persons
         {
 
             RequestStatus requestStatus = RequestStatus.Rejected;
+
+            Thread.Sleep(500);
 
             //Если есть просроченные книги, то отказываем в прокате книги
             if (isReaderHasOverBorrowedBooks(readerId, today))
