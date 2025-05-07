@@ -139,7 +139,7 @@
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
-            ClientSize = new Size(1179, 586);
+            ClientSize = new Size(1162, 671);
             Controls.Add(ReaderAnswer2);
             Controls.Add(LibrarianAnswer2);
             Controls.Add(ReaderAnswer1);

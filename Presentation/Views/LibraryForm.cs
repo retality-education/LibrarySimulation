@@ -35,7 +35,10 @@ namespace LibrarySimulation.Presentation.Views
         private readonly ConcurrentDictionary<int, PictureBox> _librarians = new();
         private readonly ConcurrentDictionary<int, PictureBox> _librarianAnswers = new();
         private readonly ConcurrentDictionary<int, PictureBox> _readerAnswers = new();
-        
+        private readonly ConcurrentDictionary<int, DateTime> _lastLibrarianAnswerChange = new();
+        private readonly ConcurrentDictionary<int, DateTime> _lastReaderAnswerChange = new();
+        private readonly System.Windows.Forms.Timer _dialogueResetTimer = new();
+
 
         // Координаты и блокировки
         private readonly List<int> _queueXPositions = new() { 620, 780, 940, 1100 };
@@ -58,6 +61,10 @@ namespace LibrarySimulation.Presentation.Views
             _answerLibrarianPictures = new() { LibrarianAnswer1, LibrarianAnswer2 };
             _answerReaderPictures = new() { ReaderAnswer1, ReaderAnswer2 };
             _workersPictures = new() { Librarian1, Librarian2 };
+
+            _dialogueResetTimer.Interval = 200; // Проверяем каждые 200 мс
+            _dialogueResetTimer.Tick += ResetOldDialogues;
+            _dialogueResetTimer.Start();
         }
 
         #region Movement Logic
@@ -138,6 +145,37 @@ namespace LibrarySimulation.Presentation.Views
             }
         }
         #endregion
+        private void ResetOldDialogues(object sender, EventArgs e)
+        {
+            var now = DateTime.Now;
+            var resetTime = TimeSpan.FromSeconds(1); // 1 секунда
+
+            // Сбрасываем старые ответы библиотекаря
+            foreach (var kvp in _lastLibrarianAnswerChange.ToArray())
+            {
+                if (now - kvp.Value > resetTime)
+                {
+                    if (_librarianAnswers.TryGetValue(kvp.Key, out var pictureBox))
+                    {
+                        this.InvokeIfRequired(() => pictureBox.Image = null);
+                        _lastLibrarianAnswerChange.TryRemove(kvp.Key, out _);
+                    }
+                }
+            }
+
+            // Сбрасываем старые ответы читателя
+            foreach (var kvp in _lastReaderAnswerChange.ToArray())
+            {
+                if (now - kvp.Value > resetTime)
+                {
+                    if (_readerAnswers.TryGetValue(kvp.Key, out var pictureBox))
+                    {
+                        this.InvokeIfRequired(() => pictureBox.Image = null);
+                        _lastReaderAnswerChange.TryRemove(kvp.Key, out _);
+                    }
+                }
+            }
+        }
 
         #region ILibraryView Implementation
         public void OnCreateWorker(int workerId)
@@ -215,26 +253,31 @@ namespace LibrarySimulation.Presentation.Views
         public void OnReaderStartedDialogueWithWorker(int readerId, int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.WhatYouWant;
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnReaderAskedForBook(int readerId, int workerId)
         {
             _readerAnswers[workerId].Image = Properties.Resources.WannaTakeBook;
+            _lastReaderAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnReaderAskedForReturnBook(int readerId, int workerId)
         {
             _readerAnswers[workerId].Image = Properties.Resources.WannaReturnBook;
+            _lastReaderAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnWorkerDeclineRequest(int readerId, int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.RequestDeclined;
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnWorkerAcceptRequest(int readerId, int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.YesOk;
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
         }
         public void OnWorkerReturnedBookToLibrary(int workerId)
         {
@@ -243,6 +286,7 @@ namespace LibrarySimulation.Presentation.Views
         public void OnWorkerFoundBook(int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.BookExist;
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
         }
         public void OnWorkerTookBookInLibrary(int workerId)
         {
@@ -252,6 +296,7 @@ namespace LibrarySimulation.Presentation.Views
         public void OnWorkerNotFoundBook(int workerId)
         {
             _librarianAnswers[workerId].Image = Properties.Resources.BookNotExist;
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnReaderTookBook(int readerId, int workerId)
@@ -268,11 +313,13 @@ namespace LibrarySimulation.Presentation.Views
         public void OnReaderBecameHappy(int readerId, int workerId)
         {
             _readerAnswers[workerId].Image = Properties.Resources.ReaderHappy;
+            _lastReaderAnswerChange[workerId] = DateTime.Now;
         }
 
         public void OnReaderBecameAngry(int readerId, int workerId)
         {
             _readerAnswers[workerId].Image = Properties.Resources.ReaderAngry;
+            _lastReaderAnswerChange[workerId] = DateTime.Now;
         }
         #endregion
         public async void OnWorkerGoingToReturnBook(int workerId)
@@ -312,7 +359,7 @@ namespace LibrarySimulation.Presentation.Views
             if (!_readers.TryGetValue(readerId, out var reader))
                 return;
             _librarianAnswers[workerId].Image = Properties.Resources.Goodbye;
-
+            _lastLibrarianAnswerChange[workerId] = DateTime.Now;
 
             CancelReaderMovement(readerId);
 
