@@ -73,32 +73,50 @@ namespace LibrarySimulation.Presentation.Views
             try
             {
                 if (token.IsCancellationRequested)
+                {
+                    // При отмене - мгновенно перемещаем в конечную позицию по Y
+                    this.InvokeIfRequired(() => pictureBox.Top = targetY);
                     return;
+                }
 
                 int startY = pictureBox.Top;
                 float distance = targetY - startY;
-                int steps = Math.Max(1, durationMs / 16); // ~60 FPS
+                int steps = Math.Max(1, durationMs / 16);
                 float stepY = distance / steps;
 
                 for (int i = 1; i <= steps; i++)
                 {
                     if (token.IsCancellationRequested)
-                        break;
-                    int newY = startY + (int)(stepY * i);
+                    {
+                        // При отмене во время движения - мгновенно перемещаем в конечную позицию
+                        this.InvokeIfRequired(() => pictureBox.Top = targetY);
+                        return;
+                    }
 
+                    int newY = startY + (int)(stepY * i);
                     this.InvokeIfRequired(() => pictureBox.Top = newY);
+
                     try
                     {
-                        await Task.Delay(16, token); // Фиксированный интервал для плавности
+                        await Task.Delay(16, token);
                     }
-                    catch (Exception e) { }
+                    catch (OperationCanceledException)
+                    {
+                        // При отмене - мгновенно перемещаем в конечную позицию
+                        this.InvokeIfRequired(() => pictureBox.Top = targetY);
+                        return;
+                    }
+                    catch { /* Игнорируем другие ошибки */ }
                 }
-
 
                 // Финализация позиции
                 this.InvokeIfRequired(() => pictureBox.Top = targetY);
             }
-            catch (Exception) { }
+            catch
+            {
+                // Гарантируем установку конечной позиции даже при ошибках
+                this.InvokeIfRequired(() => pictureBox.Top = targetY);
+            }
         }
 
         private async Task MoveToX(PictureBox pictureBox, int targetX, CancellationToken token, int durationMs = 500)
