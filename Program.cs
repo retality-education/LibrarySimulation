@@ -18,9 +18,8 @@ namespace LibrarySimulation
             ApplicationConfiguration.Initialize();
             var view = new LibraryForm();
             var library = new Library();
-            var librarySimulator = new LibrarySimulator(library);
 
-            var controller = new LibraryController(librarySimulator, view);
+            var controller = new LibraryController(library, view);
 
             Application.Run(view);
         }

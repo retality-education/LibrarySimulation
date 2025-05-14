@@ -12,6 +12,7 @@ using System.Diagnostics;
 using LibrarySimulation.Domain.Entities.Persons;
 using LibrarySimulation.Core.Interfaces;
 using LibrarySimulation.Core;
+using LibrarySimulation.Domain.Entities.Publications;
 
 namespace LibrarySimulation.Domain.Aggregates
 {
@@ -35,6 +36,10 @@ namespace LibrarySimulation.Domain.Aggregates
 
         // Количество доступных публикаций
         public int CountOfAvailablePublications { get; set; } = 0;
+
+        private Random _random = new Random();
+        private int _readersCount;
+        private List<Reader> _allReaders = new();
 
         // Проверяет, содержится ли публикация в библиотеке
         public bool isLibraryContainsPublication(Publication publication)
@@ -70,6 +75,239 @@ namespace LibrarySimulation.Domain.Aggregates
             var temp = LibraryFactory.CreateLibrarian(name, this); // Создание нового библиотекаря
             Librarians.Add(temp); // Добавление библиотекаря в список
             Notify(LibraryEvents.CreateWorker, WorkerID: temp.Id); // Оповещение о создании работника
+        }
+        #endregion
+
+        #region init library
+        //заполнение библиотеки публикациями
+        private void FillLibraryWithPublications()
+        {
+            var libraryPublications = new List<Publication>
+            {
+                new Book { Title = "Война и мир", Author = "Лев Толстой", Year = 1869, Theme = Theme.Literature },
+                new Book { Title = "Преступление и наказание", Author = "Фёдор Достоевский", Year = 1866, Theme = Theme.Literature },
+                new Journal { Title = "National Geographic", Author = "Various", Year = 2023, Theme = Theme.Science },
+                new Textbook { Title = "Основы программирования", Author = "Д. Кнут", Year = 2020, Theme = Theme.Technology },
+                new Thesis { Title = "Квантовая механика", Author = "А. Эйнштейн", Year = 1924, Theme = Theme.Science },
+                new Book { Title = "1984", Author = "Джордж Оруэлл", Year = 1949, Theme = Theme.Literature },
+                new Journal { Title = "Nature", Author = "Various", Year = 2023, Theme = Theme.Science },
+                new Textbook { Title = "Анатомия человека", Author = "И. Павлов", Year = 2018, Theme = Theme.Medicine },
+                new Thesis { Title = "История Древнего Рима", Author = "М. Ростовцев", Year = 1918, Theme = Theme.History },
+                new Book { Title = "Мастер и Маргарита", Author = "Михаил Булгаков", Year = 1967, Theme = Theme.Literature },
+                new Journal { Title = "Forbes", Author = "Various", Year = 2023, Theme = Theme.Technology },
+                new Textbook { Title = "Основы химии", Author = "Д. Менделеев", Year = 1869, Theme = Theme.Science },
+                new Thesis { Title = "Теория относительности", Author = "А. Эйнштейн", Year = 1905, Theme = Theme.Science },
+                new Book { Title = "Гарри Поттер и философский камень", Author = "Дж. К. Роулинг", Year = 1997, Theme = Theme.Literature },
+                new Journal { Title = "Science", Author = "Various", Year = 2023, Theme = Theme.Science },
+                new Textbook { Title = "История Средних веков", Author = "Л. Гумилёв", Year = 1980, Theme = Theme.History },
+                new Thesis { Title = "Искусственный интеллект", Author = "А. Тьюринг", Year = 1950, Theme = Theme.Technology },
+                new Book { Title = "Тихий Дон", Author = "Михаил Шолохов", Year = 1940, Theme = Theme.Literature },
+                new Journal { Title = "The Lancet", Author = "Various", Year = 2023, Theme = Theme.Medicine },
+                new Textbook { Title = "Физика для вузов", Author = "Р. Фейнман", Year = 1963, Theme = Theme.Science },
+                new Thesis { Title = "Кибернетика", Author = "Н. Винер", Year = 1948, Theme = Theme.Technology },
+                new Book { Title = "Анна Каренина", Author = "Лев Толстой", Year = 1877, Theme = Theme.Literature },
+                new Journal { Title = "Time", Author = "Various", Year = 2023, Theme = Theme.History },
+                new Textbook { Title = "Биология клетки", Author = "Б. Албертс", Year = 2002, Theme = Theme.Medicine },
+                new Thesis { Title = "Квантовая электродинамика", Author = "Р. Фейнман", Year = 1949, Theme = Theme.Science }
+            };
+
+            foreach (var publication in libraryPublications)
+                AddNewPublication(publication, _random.Next(1, 5));
+
+        }
+        private void InitializeLibrarians()
+        {
+            AddLibrarian("Анна Ивановна");
+            AddLibrarian("Петр Сергеевич");
+        }
+
+        // Определение количества читателей в зависимости от сезона
+        private int GetReadersCountForSeason()
+        {
+            int month = today.Month;
+
+            // Осень (сентябрь-ноябрь) - больше читателей
+            if (month >= 9 && month <= 11)
+            {
+                return _random.Next(5, 10);
+            }
+            // Лето (июнь-август) - меньше читателей
+            else if (month >= 6 && month <= 8)
+            {
+                return _random.Next(1, 4);
+            }
+            // Весна (март-май) - среднее количество
+            else if (month >= 3 && month <= 5)
+            {
+                return _random.Next(3, 7);
+            }
+            // Зима (декабрь-февраль) - среднее количество
+            else
+            {
+                return _random.Next(2, 6);
+            }
+        }
+        // Определение типа запроса в зависимости от сезона
+        private RequestType GetRequestTypeBasedOnSeason(int readerId)
+        {
+            int month = today.Month;
+            bool hasBorrowedBooks = Publications
+                            .Where(x => x.owners.ContainsKey(readerId))
+                            .ToList()
+                            .Count > 0;
+
+            if (!hasBorrowedBooks) return RequestType.Take;
+
+            // Осень - чаще берут
+            if (month >= 9 && month <= 11)
+                return _random.Next(10) < 7 ? RequestType.Take : RequestType.Return;
+            // Лето - чаще возвращают
+            else if (month >= 6 && month <= 8)
+                return _random.Next(10) < 3 ? RequestType.Take : RequestType.Return;
+            // Другие сезоны - 50/50
+            else
+                return _random.Next(2) == 0 ? RequestType.Take : RequestType.Return;
+        }
+
+
+        private Reader GetOrCreateReader()
+        {
+            //ищем неактивных читателей
+            var allNonActiveReaders = _allReaders.Where(x => !x.isReaderActive).ToList();
+
+            if (allNonActiveReaders.Count > 0 && _random.Next(10) < 3)
+            {
+                return allNonActiveReaders[_random.Next(allNonActiveReaders.Count)];
+            }
+
+            //если таких нет создаем новых 
+            _readersCount++;
+            var newReader = new Reader($"Читатель_{_readersCount}");
+            _allReaders.Add(newReader);
+            return newReader;
+        }
+
+        //создание нового читателя
+        private Reader GenerateNewReader()
+        {
+            var reader = GetOrCreateReader();
+            reader.Requests = new PriorityQueue<Request, int>();
+
+
+            // Получаем список взятых книг, если нет - создаем
+            var borrowedBooks = Publications
+                .Where(x => x.owners.ContainsKey(reader.Id))
+                .Select(x => x.Publication)
+                .ToList();
+            //генерируем случайное количество запросов
+            int requestCount = _random.Next(1, 4);
+
+            //по каждому запросу
+            for (int i = 0; i < requestCount; i++)
+            {
+                //получаем тип запроса на основе сезонности
+                RequestType requestType = GetRequestTypeBasedOnSeason(reader.Id);
+                Publication selectedPub;
+
+                //выбираем случайную книгу либо на возврат либо на взятие
+                if (requestType == RequestType.Return && borrowedBooks.Count > 0)
+                    selectedPub = borrowedBooks[_random.Next(borrowedBooks.Count)];
+                else
+                    selectedPub = Publications[_random.Next(Publications.Count)].Publication;
+
+                //добавление нового запроса читателя в его очередь
+                reader.Requests.Enqueue(new Request(requestType, selectedPub), (int)requestType);
+            }
+
+            return reader;
+        }
+        #endregion
+
+        #region library start logic
+        //запуск
+        public void Start()
+        {
+            new Thread(StartSimulation).Start();
+        }
+
+        //основной метод симуляции
+        private void StartSimulation()
+        {
+            //заполняем библиотеку публикациями
+            FillLibraryWithPublications();
+            //инициализируем библиотекарей
+            InitializeLibrarians();
+            //запуск фоновой задачи пополнения библиотеки книгами
+            Task.Run(() => refillLibrary());
+
+            //запускаем основной бесконечный цикл
+            while (true)
+            {
+                // изменяем дату на 15 дней и уведомляем об изменениях
+                today = today.AddDays(15);
+                Notify(LibraryEvents.DateChanged, today.Year * 10000 + today.Month * 100 + today.Day);
+
+                lock (SyncHelper.ChangeCountOfLostPublications)
+                {
+                    //сохраняем количество потерянных публикаций
+                    var lastCount = CountOfLostPublications;
+                    //пересчитываем потерянные
+                    CountOfLostPublications = Publications
+                                                            .Select(x => x.CountOfMissingBooks(today))
+                                                            .Where(x => x > 0)
+                                                            .Sum();
+                    //если значение изменилось уведомляем об этом
+                    if (lastCount != CountOfLostPublications)
+                        Notify(LibraryEvents.CountOfLostPublicationsChanged, CountOfLostPublications);
+                }
+                //количество читателей для генерации основываясь на сезоне
+                int readersToGenerate = GetReadersCountForSeason();
+
+                //создаем нужное количество читателей
+                for (int i = 0; i < readersToGenerate; i++)
+                {
+                    var reader = GenerateNewReader();
+                    if (reader.Requests.Count > 0)
+                    {
+                        ReaderComeToLibrary(reader);
+                    }
+                }
+
+                // Имитация работы библиотеки (читатели приходят и уходят)
+                Thread.Sleep(TimingConsts.TimeBetweenDays); // Пауза между днями
+            }
+        }
+
+        //пополнение библиотеки
+        private void refillLibrary()
+        {
+            while (true)
+            {
+                //пауза на 25 сек
+                Thread.Sleep(25000);
+
+                //формируем список публикаций, у которых не хватает экземпляров на данный момент
+                var temp = Publications
+                            .Select(x => (x, x.CountOfMissingBooks(today)))
+                            .Where(x => x.Item2 > 0)
+                            .ToList();
+
+                if (temp.Count > 0)
+                {
+                    Notify(LibraryEvents.LibraryRefilled);
+                    //для каждой публикации
+                    foreach (var x in temp)
+                    {
+                        lock (SyncHelper.ChangeCountOfAvailablePublications)
+                        {
+                            //добавляем недостающие копии
+                            x.Item1.AddCopiesOfPublication(x.Item2);
+                            CountOfAvailablePublications += x.Item2;
+                            Notify(LibraryEvents.CountOfAvailablePublicationsChanged, CountOfAvailablePublications);
+                        }
+                    }
+                }
+            }
         }
         #endregion
 
@@ -178,5 +416,7 @@ namespace LibrarySimulation.Domain.Aggregates
             }
         }
         #endregion
+    
+    
     }
 }
