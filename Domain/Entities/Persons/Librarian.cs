@@ -12,21 +12,25 @@ namespace LibrarySimulation.Domain.Entities.Persons
 {
     internal class Librarian : Person
     {
-        private Library _library { get; set; }
+        private Library _library { get; set; }//библиотека, для работы с ней и вызова ее методов
 
-        private Thread _thread;
-        public Queue<Reader> ReaderQueue { get; } = new Queue<Reader>();
+        private Thread _thread;//поток для обработки очереди
+        public Queue<Reader> ReaderQueue { get; } = new Queue<Reader>();//очередь читателей
 
-        
+        //конструктор
+        //принимает имя библиотекаря и библиотеку
+        //инициализирует абстрактный класс Person
         public Librarian(string Name, Library library) : base(Name)
         {
             _library = library;
-            _thread = new Thread(ProcessRequests);
+            _thread = new Thread(ProcessRequests);//запускает поток для обработки запросов
             _thread.Start();
         }
 
+        //проверка очереди и обработка запросов
         public void ProcessRequests()
         {
+            //если в очереди есть читатели
             while (true)
             {
                 if (ReaderQueue.Count > 0)
@@ -35,7 +39,8 @@ namespace LibrarySimulation.Domain.Entities.Persons
 
                     //Оповещает о том, что рабочий начал диалог с читателем
                     _library.Notify(LibraryEvents.ReaderStartedDialogueWithWorker, WorkerID: Id);
-                    
+
+                    //обработка запроса конкретного читателя
                     ProcessReaderRequests(reader, _library.today);
 
                     ReaderQueue.Dequeue();
@@ -43,28 +48,33 @@ namespace LibrarySimulation.Domain.Entities.Persons
                 Thread.Sleep(100);//задержка между проверками
             }
         }
+
+        //обработка запроса читателя
         private void ProcessReaderRequests(Reader reader, DateTime today)
         {
-            while(reader.Requests.Count > 0)
+            //если у читателя есть запросы
+            while (reader.Requests.Count > 0)
             {
                 Thread.Sleep(400);
 
+                //получаем запрос
                 Request reader_request = reader.Requests.Dequeue();
                 RequestStatus requestStatus;
 
+                //обработка запрос возврата книги
                 if (reader_request.RequestType == RequestType.Return)
                 {
                     _library.Notify(LibraryEvents.ReaderAskerForReturnBook, reader.Id, Id);
                     requestStatus = ProcessReturnRequest(reader.Id, reader_request);
                 }
-                else
+                else//иначе взятия книги
                 { 
                     _library.Notify(LibraryEvents.ReaderAskedForBook, reader.Id, Id);
                     requestStatus = ProcessTakeRequest(reader.Id, reader_request, today);
                 }
                 
                 Thread.Sleep(400);
-
+                //проверяем статус запроса
                 if (requestStatus == RequestStatus.Rejected)
                     _library.Notify(LibraryEvents.ReaderBecameAngry, reader.Id, Id);
                 else
@@ -73,6 +83,7 @@ namespace LibrarySimulation.Domain.Entities.Persons
                 Thread.Sleep(450);
             }
 
+            //завершение диалога с читателем и читатель покидает библиотеку
             _library.Notify(LibraryEvents.ReaderEndedDialogueWithWorker, reader.Id, Id);
 
             Thread.Sleep(TimingConsts.TimeToLeaveFromLibrary);

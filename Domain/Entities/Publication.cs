@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Domain.Entities
 {
+    //класс для описания публикации в библиотеке
     internal class Publication
     {
-        public string Title { get; set; }
-        public string Author { get; set; }
-        public int Year { get; set; }
-        public Theme Theme { get; set; }
-        public PublicationType Type { get; set; }
+        public string Title { get; set; }//название публикации
+        public string Author { get; set; }//автор
+        public int Year { get; set; }//год публикации
+        public Theme Theme { get; set; }//тема публикации
+        public PublicationType Type { get; set; }//тип публикации
         public override string ToString() => $"{Title} ({Author}, {Year})";
     }
 }

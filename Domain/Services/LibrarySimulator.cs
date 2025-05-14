@@ -17,6 +17,7 @@ using Timer = System.Threading.Timer;
 
 namespace LibrarySimulation.Domain.Services
 {
+    //симулятор работы библиотеки
     internal class LibrarySimulator
     {
         public Library _library { get; private set; }
@@ -24,10 +25,12 @@ namespace LibrarySimulation.Domain.Services
         private int _readersCount;
         private List<Reader> _allReaders = new();
 
+        //конструктор
         public LibrarySimulator(Library library)
         {
             _library = library;
         }
+        //заполнение библиотеки публикациями
         private void FillLibraryWithPublications()
         {
             var libraryPublications = new List<Publication>
@@ -117,9 +120,10 @@ namespace LibrarySimulation.Domain.Services
                 return _random.Next(2) == 0 ? RequestType.Take : RequestType.Return;
         }
 
+        
         private Reader GetOrCreateReader()
         {
-            //
+            //ищем неактивных читателей
             var allNonActiveReaders = _allReaders.Where(x => !x.isReaderActive).ToList();
 
             if (allNonActiveReaders.Count > 0 && _random.Next(10) < 3)
@@ -127,72 +131,88 @@ namespace LibrarySimulation.Domain.Services
                 return allNonActiveReaders[_random.Next(allNonActiveReaders.Count)];
             }
 
-            // 
+            //если таких нет создаем новых 
             _readersCount++;
             var newReader = new Reader($"Читатель_{_readersCount}");
             _allReaders.Add(newReader);
             return newReader;
         }
 
+        //создание нового читателя
         private Reader GenerateNewReader()
         {
             var reader = GetOrCreateReader();
             reader.Requests = new PriorityQueue<Request, int>();
 
-            // Получаем список взятых книг
 
-
+            // Получаем список взятых книг, если нет - создаем
             var borrowedBooks = _library.Publications
                 .Where(x => x.owners.ContainsKey(reader.Id))
                 .Select(x => x.Publication)
                 .ToList();
-
+            //генерируем случайное количество запросов
             int requestCount = _random.Next(1, 4);
 
+            //по каждому запросу
             for (int i = 0; i < requestCount; i++)
             {
+                //получаем тип запроса на основе сезонности
                 RequestType requestType = GetRequestTypeBasedOnSeason(reader.Id);
                 Publication selectedPub;
 
+                //выбираем случайную книгу либо на возврат либо на взятие
                 if (requestType == RequestType.Return && borrowedBooks.Count > 0)
                     selectedPub = borrowedBooks[_random.Next(borrowedBooks.Count)];
                 else
                     selectedPub = _library.Publications[_random.Next(_library.Publications.Count)].Publication;
 
+                //добавление нового запроса читателя в его очередь
                 reader.Requests.Enqueue(new Request(requestType, selectedPub), (int)requestType);
             }
 
             return reader;
         }
 
+        //запуск
         public void Start()
         {
             new Thread(StartSimulation).Start();
         }
+
+        //основной метод симуляции
         private void StartSimulation()
         {
+            //заполняем библиотеку публикациями
             FillLibraryWithPublications();
+            //инициализируем библиотекарей
             InitializeLibrarians();
-            
+            //запуск фоновой задачи пополнения библиотеки книгами
             Task.Run(() => refillLibrary());
+
+            //запускаем основной бесконечный цикл
             while (true)
             {
-                // Увеличиваем день
+                // изменяем дату на 15 дней и уведомляем об изменениях
                 _library.today = _library.today.AddDays(15);
                 _library.Notify(LibraryEvents.DateChanged, _library.today.Year * 10000 + _library.today.Month * 100 + _library.today.Day);
 
                 lock (SyncHelper.ChangeCountOfLostPublications)
                 {
+                    //сохраняем количество потерянных публикаций
                     var lastCount = _library.CountOfLostPublications;
+                    //пересчитываем потерянные
                     _library.CountOfLostPublications = _library.Publications
                                                             .Select(x => x.CountOfMissingBooks(_library.today))
                                                             .Where(x => x > 0)
                                                             .Sum();
+                    //если значение изменилось уведомляем об этом
                     if (lastCount != _library.CountOfLostPublications)
                         _library.Notify(LibraryEvents.CountOfLostPublicationsChanged, _library.CountOfLostPublications);
                 }
+                //количество читателей для генерации основываясь на сезоне
                 int readersToGenerate = GetReadersCountForSeason();
 
+                //создаем нужное количество читателей
                 for (int i = 0; i < readersToGenerate; i++)
                 {
                     var reader = GenerateNewReader();
@@ -206,12 +226,16 @@ namespace LibrarySimulation.Domain.Services
                 Thread.Sleep(TimingConsts.TimeBetweenDays); // Пауза между днями
             }
         }
+
+        //пополнение библиотеки
         private void refillLibrary()
         {
             while (true)
             {
+                //пауза на 25 сек
                 Thread.Sleep(25000);
 
+                //формируем список публикаций, у которых не хватает экземпляров на данный момент
                 var temp = _library.Publications
                             .Select(x => (x, x.CountOfMissingBooks(_library.today)))
                             .Where(x => x.Item2 > 0)
@@ -220,10 +244,12 @@ namespace LibrarySimulation.Domain.Services
                 if (temp.Count > 0)
                 {
                     _library.Notify(LibraryEvents.LibraryRefilled);
+                    //для каждой публикации
                     foreach (var x in temp)
                     {
                         lock (SyncHelper.ChangeCountOfAvailablePublications)
                         {
+                            //добавляем недостающие копии
                             x.Item1.AddCopiesOfPublication(x.Item2);
                             _library.CountOfAvailablePublications += x.Item2;
                             _library.Notify(LibraryEvents.CountOfAvailablePublicationsChanged, _library.CountOfAvailablePublications);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Infrastructure.Helpers
 {
+    //класс для обеспечения потокобезопасности
     internal static class SyncHelper
     {
         public static readonly object PublicationLock = new object();

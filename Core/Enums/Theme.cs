@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Core.Enums
 {
+    //перечисление возможных тем публикации
     internal enum Theme { 
         Science, 
         Literature, 

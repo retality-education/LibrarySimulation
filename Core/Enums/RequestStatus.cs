@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Core.Enums
 {
+    //перечисление для обозначения статуса запросов читателей
     internal enum RequestStatus { 
         Approved, 
         Rejected 

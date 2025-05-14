@@ -13,22 +13,24 @@ using LibrarySimulation.Domain.Entities.Persons;
 
 namespace LibrarySimulation.Presentation.Controllers
 {
+    //отвечает за взаимодействие между симулятором и пользовательским интерфейсом
     internal class LibraryController
     {
-        private LibrarySimulator _simulator;
-        private LibraryForm _view;
+        private LibrarySimulator _simulator;//ссылка на объект симулятора
+        private LibraryForm _view;//ссылка на объект интерфейса
 
         public LibraryController(LibrarySimulator librarySimulator, LibraryForm view)
         {
             _view = view;
 
-            _view.Controller = this;
+            _view.Controller = this;//устанавливает ссылку на текущий контроллер в представлении
 
             _simulator = librarySimulator;
 
-            _simulator._library.Subscribe(view);
+            _simulator._library.Subscribe(view);//подписывает представление на события библиотеки
 
-            _simulator.Start();
+            _simulator.Start();//запуск процесса работы библиотеки
         }
+
     }
 }

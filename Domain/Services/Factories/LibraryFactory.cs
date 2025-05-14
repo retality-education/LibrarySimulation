@@ -11,8 +11,10 @@ using LibrarySimulation.Domain.Entities.Persons;
 
 namespace LibrarySimulation.Domain.Services.Factories
 {
+    //класс для создания различных объектов
     internal static class LibraryFactory
     {
+        //создаем объект публикации по заданным параметрам
         public static Publication CreatePublication(PublicationType type, string title, string author, Theme theme, int year)
         {
             Publication publication;
@@ -41,14 +43,17 @@ namespace LibrarySimulation.Domain.Services.Factories
 
             return publication;
         }
+        //создаем публикацию в библиотеке
         public static LibraryPublication CreateLibraryPublication(Publication publication)
         {
             return new LibraryPublication(publication);
         }
+        //создаем библиотекаря
         public static Librarian CreateLibrarian(string name, Library library)
         {
             return new Librarian(name, library);
         }
+        //создаем читателя
         public static Reader CreateReader(string name)
         {
             return new Reader(name);

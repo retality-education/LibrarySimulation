@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Core.Enums
 {
+    //перечисление типа публикации
     internal enum PublicationType { 
         Book, 
         Journal, 

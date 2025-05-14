@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LibrarySimulation.Domain.Entities.Publications
 {
+    //класс наследник
     internal class Book : Publication { 
         public Book() { 
             Type = PublicationType.Book; 
